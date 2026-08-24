@@ -1,0 +1,12 @@
+:root{--bg:#08111a;--card:#0e1927;--ink:#f4f7fb;--muted:#91a6c0;--line:#26384d;--blue:#4b9cff;--blue2:#65acff;--green:#38c990;--red:#ff7180;--shadow:none}
+body{background:radial-gradient(circle at 70% -20%,rgba(39,111,184,.13),transparent 42rem),var(--bg)}
+.topbar{background:#09121b;border-color:var(--line)}.brand-mark{background:#1977c5;color:#fff}.brand small,.save-state{color:var(--muted)}.back-link{color:#70b7ff}
+.scanner-card{background:#0e1927;border:1px solid var(--line);border-radius:14px;box-shadow:none;color:var(--ink)}.scan-icon{background:#113354;border-color:#28557d;color:#6db5fb}.scan-copy p,.message{color:var(--muted)}
+input{border-color:#30435f;background:#091522;color:var(--ink)}input::placeholder{color:#607795}input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(75,156,255,.2)}
+.primary,.scanner-card .primary{background:#397fc5;color:#fff}.primary:hover,.scanner-card .primary:hover{background:#4893dc}
+.type-choice button,.button,.ghost,.icon-btn{border:1px solid #30435f;background:#101d2b;color:#c8d6e5}.type-choice button:hover,.button:hover,.ghost:hover,.icon-btn:hover{border-color:#4b82b8;background:#162b42;color:#fff}.type-choice .ghost{border-color:#30435f;background:transparent;color:var(--muted)}
+.pending-card{background:#182616;border-color:#3b6139;color:#d9f2d8}.pending-card span{color:#a8caa4}
+.content-card{background:var(--card);border-color:var(--line);box-shadow:none}.section-head{background:#101d2b;border-bottom:1px solid #1d2d40}.section-head p{color:var(--muted)}.tools{background:var(--card)}.table-wrap{border-color:var(--line)}
+th,td{border-color:#203247}th{background:#101d2b;color:var(--muted)}tbody tr:hover{background:#111f30}td code{background:#14263a;color:#86c2ff}.row-actions button{background:#142234;color:#b8c8d9}.row-actions button:hover{background:#1c3550;color:#fff}.row-actions .delete{color:var(--red)}
+.empty{color:var(--muted)}.empty b{color:var(--ink)}dialog{border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 28px 80px rgba(0,0,0,.5)}dialog::backdrop{background:rgba(2,7,12,.78)}dialog p{color:var(--muted)}.toast{border:1px solid #356fa9;background:#102b45;color:#e7f3ff;box-shadow:0 16px 35px rgba(0,0,0,.35)}
+@keyframes flash{0%,50%{background:#153528}100%{background:transparent}}
