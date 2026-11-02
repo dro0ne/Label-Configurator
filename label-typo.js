@@ -167,10 +167,10 @@
       Array.from(body.children).forEach(function (ch) { if (ch !== safeRow) ch.classList.add('lt-old'); });
     });
 
-    gB.appendChild(slider('Штрих ширина', 0.4, 1, 0.1, function () { return state.bcW; }, function (v) { state.bcW = v; }));
-    gB.appendChild(slider('Штрих высота', 0.5, 1.6, 0.05, function () { return state.bcH; }, function (v) { state.bcH = v; }));
+    gB.appendChild(slider('Штрих ширина', 0.4, 1, 0.02, function () { return state.bcW; }, function (v) { state.bcW = v; }));
+    gB.appendChild(slider('Штрих высота', 0.5, 1.6, 0.02, function () { return state.bcH; }, function (v) { state.bcH = v; }));
 
-    gQ.appendChild(slider('QR размер', 0.5, 1.4, 0.05, function () { return state.qr; }, function (v) { state.qr = v; }));
+    gQ.appendChild(slider('QR размер', 0.5, 1.4, 0.02, function () { return state.qr; }, function (v) { state.qr = v; }));
 
     var codes = document.createElement('div'); codes.className = 'lt-item';
     codes.innerHTML = '<div class="flex items-center justify-between mb-2"><label class="text-xs text-muted-foreground">Расположение кодов</label></div>';

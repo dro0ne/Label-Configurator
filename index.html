@@ -38,7 +38,7 @@
     <script defer src="./lc-extras.js?v=20261102-6"></script>
     <link rel="stylesheet" href="./a4.css?v=20261102-7">
     <script defer src="./a4.js?v=20261102-13"></script>
-    <script defer src="./label-typo.js?v=20261102-4"></script>
+    <script defer src="./label-typo.js?v=20261102-5"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1270,13 +1270,14 @@
       var q = qr.firstElementChild, modules = 21;
       var vb = q && q.getAttribute && q.getAttribute('viewBox');
       if (vb) modules = parseFloat(vb.split(/[\s,]+/)[2]) || 21;
-      var maxQ = Math.min(rowH, (barcode ? 18 : 26) * k * qrF);
-      if (barcode && !portrait) maxQ = Math.min(maxQ, rowW * 0.42 * Math.max(1, qrF));
-      if (barcode && portrait) maxQ = Math.min(maxQ, rowH * 0.55);
-      var dpm = Math.floor(maxQ / (modules * DOT_MM));
-      if (dpm < 2) problems.push('QR слишком мелкий');
-      dpm = Math.max(dpm, 1);
-      qrMm = dpm * modules * DOT_MM;
+      /* базовый размер (1.00×) и плавное изменение ползунком «QR размер» */
+      var baseQ = Math.min(rowH, (barcode ? 18 : 26) * k);
+      if (barcode && !portrait) baseQ = Math.min(baseQ, rowW * 0.42);
+      if (barcode && portrait) baseQ = Math.min(baseQ, rowH * 0.55);
+      var hardQ = Math.min(rowH, barcode && !portrait ? rowW * 0.6 : rowW);
+      var minQ = modules * 2 * DOT_MM; /* не мельче 2 точек на модуль */
+      qrMm = Math.min(hardQ, Math.max(minQ, baseQ * qrF));
+      if (qrMm / modules < 2 * DOT_MM - 1e-6) problems.push('QR слишком мелкий');
       qr.style.width = qrMm.toFixed(3) + 'mm'; qr.style.height = qrMm.toFixed(3) + 'mm';
     }
 
@@ -1295,16 +1296,23 @@
       if (isFinite(unit) && maxX > minX) {
         var modulesB = Math.round((maxX - minX) / unit);
         var avail = (portrait || !qr) ? rowW : rowW - qrMm - gap;
-        /* тихая зона ≈ 6 модулей с каждой стороны (поля этикетки тоже белые) */
-        var dMax = Math.min(4, Math.floor(avail / ((modulesB + 12) * DOT_MM)));
-        /* «Ширина» из «Типографики» уменьшает штрихкод, но не тоньше 2 точек на полоску */
-        var d = Math.min(dMax, Math.max(2, Math.floor(avail * bcF / ((modulesB + 12) * DOT_MM))));
-        if (dMax < 2) { d = Math.max(1, Math.floor(avail / (modulesB * DOT_MM))); problems.push('штрихкод слишком длинный'); }
+        /* максимум: с тихой зоной ≈ 6 модулей с каждой стороны, но не толще 4 точек на полоску;
+           минимум: 2 точки на полоску. Ползунок «Штрих ширина» плавно ведёт между ними (0.40× → 1.00×). */
+        var maxW = Math.min(avail * modulesB / (modulesB + 12), modulesB * 4 * DOT_MM);
+        var minW = modulesB * 2 * DOT_MM;
+        var bwMm;
+        if (maxW >= minW) {
+          var t = Math.max(0, Math.min(1, (bcF - 0.4) / 0.6));
+          bwMm = minW + (maxW - minW) * t;
+        } else {
+          /* не помещается даже по 2 точки — целая 1 точка на полоску (дробная читается хуже) */
+          bwMm = modulesB * Math.max(1, Math.floor(avail / (modulesB * DOT_MM))) * DOT_MM;
+          problems.push(bwMm > avail + 0.01 ? 'штрихкод не помещается' : 'штрихкод слишком длинный');
+          bwMm = Math.min(bwMm, avail);
+        }
         svg.setAttribute('viewBox', minX + ' 0 ' + (maxX - minX) + ' ' + (barH || 1));
-        var bwMm = Math.min(modulesB * d * DOT_MM, avail);
         svg.style.width = bwMm.toFixed(3) + 'mm';
         barcode.style.width = bwMm.toFixed(3) + 'mm';
-        if (modulesB * d * DOT_MM > avail + 0.01) problems.push('штрихкод не помещается');
       }
     }
     return problems.join(', ');
