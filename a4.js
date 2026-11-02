@@ -26,7 +26,11 @@
     });
   }
   function libs() { return Promise.all([loadScript(LIBS.barcode), loadScript(LIBS.qr)]); }
-  function field(name) { var el = document.querySelector('[data-testid="input-' + name + '"]'); return el ? el.value.trim() : ''; }
+  var DEFAULT_STORE = /^название\s+магазина$/i; /* заглушка из формы — не печатаем */
+  function field(name) {
+    var el = document.querySelector('[data-testid="input-' + name + '"]'); var v = el ? el.value.trim() : '';
+    return name === 'store' && DEFAULT_STORE.test(v) ? '' : v;
+  }
   function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
   function ico(path) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>'; }
 
@@ -140,7 +144,7 @@
     if (field('serial')) codes.push(objHtml('qr', field('serial'), 45, 'qr'));
     if (codes.length) h += '<p data-role="codes" style="text-align:center">' + codes.join(SPACER) + '</p>';
     if (currentLogo()) h += roleBlock('logo');
-    else if (field('store')) h += '<p style="text-align:center"><span style="font-size:20pt"><b>' + esc(field('store')) + '</b></span></p>';
+    else if (field('store')) h += '<p data-role="store" style="text-align:center"><span style="font-size:20pt"><b>' + esc(field('store')) + '</b></span></p>';
     return h + '<p><br></p>';
   }
 
@@ -187,6 +191,7 @@
         if (blk && blk.parentNode === page) blk.remove();
       });
       if (curName !== logoName) {
+        Array.from(page.querySelectorAll('p[data-role="store"]')).forEach(function (n) { n.remove(); });
         var w = cur ? parseFloat(cur.style.width) : 0;
         var node = placeBlock('logo', roleBlock('logo', logoName));
         if (node && w) node.querySelector('.a4-obj').style.width = w + 'mm';
@@ -198,6 +203,14 @@
     }
     if (!page.firstChild) page.innerHTML = '<p><br></p>';
     savedRange = null; scheduleSave(); updateToolbar();
+  }
+
+  /* Убрать строку-заглушку «Название магазина», попавшую на лист раньше */
+  function cleanupDefaults() {
+    Array.from(page.children).forEach(function (p) {
+      if (DEFAULT_STORE.test(p.textContent.replace(/​/g, '').trim()) && !p.querySelector('.a4-obj')) p.remove();
+    });
+    if (!page.firstChild) page.innerHTML = '<p><br></p>';
   }
 
   /* Документы из прошлой версии: проставить роли знакомым элементам */
@@ -583,7 +596,7 @@
     objBar = root.querySelector('.a4-objbar');
 
     var saved = loadDoc();
-    if (saved) { page.innerHTML = saved.replace(/pyaterochka-horizontal-logo\.svg/g, 'pyaterochka-logo.svg'); migrate(); }
+    if (saved) { page.innerHTML = saved.replace(/pyaterochka-horizontal-logo\.svg/g, 'pyaterochka-logo.svg'); migrate(); cleanupDefaults(); }
     else {
       page.innerHTML = '<p><br></p>';
       libs().then(function () { page.innerHTML = labelBlockHtml(); scheduleSave(); updateToolbar(); })

@@ -37,7 +37,7 @@
     <script defer src="./ux-enhancements.js"></script>
     <script defer src="./lc-extras.js?v=20261102-5"></script>
     <link rel="stylesheet" href="./a4.css?v=20261102-7">
-    <script defer src="./a4.js?v=20261102-11"></script>
+    <script defer src="./a4.js?v=20261102-12"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1243,7 +1243,8 @@
       if (logoScale !== 1) footer.style.setProperty('--logo-scale', String(logoScale));
       footer.appendChild(logoImage);
     } else {
-      var storeInput = field('store'); footer.textContent = storeInput ? storeInput.value : '';
+      var storeInput = field('store'), storeText = storeInput ? storeInput.value.trim() : '';
+      footer.textContent = /^название\s+магазина$/i.test(storeText) ? '' : storeText; /* заглушку из формы не печатаем */
       if (!footer.textContent) footer.classList.add('is-empty');
     }
     sheet.appendChild(header); sheet.appendChild(codes); sheet.appendChild(footer);
