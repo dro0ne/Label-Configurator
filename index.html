@@ -35,9 +35,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
-    <script defer src="./lc-extras.js?v=20261102-4"></script>
-    <link rel="stylesheet" href="./a4.css?v=20261102-3">
-    <script defer src="./a4.js?v=20261102-4"></script>
+    <script defer src="./lc-extras.js?v=20261102-5"></script>
+    <link rel="stylesheet" href="./a4.css?v=20261102-4">
+    <script defer src="./a4.js?v=20261102-7"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -691,7 +691,7 @@
   /* ── SVG logos — paths to real files ───────────────────────────────── */
   var LOGOS = {
     'Перекрёсток': './perekrestok-logo.svg',
-    'Пятёрочка':   './pyaterochka-horizontal-logo.svg',
+    'Пятёрочка':   './pyaterochka-logo.svg',
     'Чижик':       './chizhik-horizontal-logo.svg'
   };
 
@@ -781,7 +781,7 @@
     logoOverlay.src = LOGOS[name];
     logoOverlay.alt = name;
     /* Use darker threshold for Perekrestok to force all shades to black */
-    if (name === 'Перекрёсток') {
+    if (name === 'Перекрёсток' || name === 'Пятёрочка') {
       logoOverlay.style.filter = 'url(#lc-threshold-dark)';
     }
     applyLogoSize();
@@ -1127,7 +1127,7 @@
   }
 
   function captureBatchLogo(source) {
-    var logos = { 'Перекрёсток': './perekrestok-logo.svg', 'Пятёрочка': './pyaterochka-horizontal-logo.svg', 'Чижик': './chizhik-horizontal-logo.svg' };
+    var logos = { 'Перекрёсток': './perekrestok-logo.svg', 'Пятёрочка': './pyaterochka-logo.svg', 'Чижик': './chizhik-horizontal-logo.svg' };
     var current = source && source.querySelector('#lc-store-logo');
     if (current) return { node: current.cloneNode(true), src: current.getAttribute('src'), alt: current.getAttribute('alt') || '' };
     var name = window.__lcActiveLogo;
@@ -1238,7 +1238,7 @@
     } else if (logo && logo.src) {
       var logoImage = document.createElement('img');
       logoImage.className = 'lc-print-sheet-logo'; logoImage.src = logo.src; logoImage.alt = logo.alt || '';
-      logoImage.style.setProperty('filter', logo.alt === 'Перекрёсток' ? 'url(#lc-threshold-dark)' : 'url(#lc-threshold)', 'important');
+      logoImage.style.setProperty('filter', (logo.alt === 'Перекрёсток' || logo.alt === 'Пятёрочка') ? 'url(#lc-threshold-dark)' : 'url(#lc-threshold)', 'important');
       var logoScale = window.__lcLogoScale || 1;
       if (logoScale !== 1) footer.style.setProperty('--logo-scale', String(logoScale));
       footer.appendChild(logoImage);

@@ -5,7 +5,7 @@
 
   var KEY = 'lc-a4-doc-v1';
   var LOGOS = {
-    'Пятёрочка': './pyaterochka-horizontal-logo.svg',
+    'Пятёрочка': './pyaterochka-logo.svg',
     'Перекрёсток': './perekrestok-logo.svg',
     'Чижик': './chizhik-horizontal-logo.svg'
   };
@@ -383,7 +383,7 @@
     objBar = root.querySelector('.a4-objbar');
 
     var saved = loadDoc();
-    if (saved) { page.innerHTML = saved; migrate(); }
+    if (saved) { page.innerHTML = saved.replace(/pyaterochka-horizontal-logo\.svg/g, 'pyaterochka-logo.svg'); migrate(); }
     else {
       page.innerHTML = '<p><br></p>';
       libs().then(function () { page.innerHTML = labelBlockHtml(); scheduleSave(); updateToolbar(); })
@@ -470,7 +470,11 @@
     b.type = 'button';
     b.className = (sample ? sample.className : '') + ' lc-a4-size-btn';
     b.setAttribute('data-testid', 'button-size-a4');
-    b.innerHTML = '<div class="font-medium">A4 · 210 × 297 мм</div><div class="text-xs opacity-80">Лист · как в Word</div>';
+    /* те же классы, что у соседних кнопок размера — чтобы выглядела одинаково */
+    var t1 = sample && sample.children[0] ? sample.children[0].className : 'text-[13px] font-medium leading-tight';
+    var t2 = sample && sample.children[1] ? sample.children[1].className : 'text-[11px] text-muted-foreground mt-0.5';
+    b.innerHTML = '<div class="' + t1 + '">Лист A4</div><div class="' + t2 + '">Обычный принтер</div>';
+    b.title = 'Лист A4 210 × 297 мм — редактор как в Word';
     b.addEventListener('click', open);
     grid.appendChild(b);
   }

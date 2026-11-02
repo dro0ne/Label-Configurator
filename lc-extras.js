@@ -51,7 +51,7 @@
 
   var LOGOS = {
     'Перекрёсток': './perekrestok-logo.svg',
-    'Пятёрочка': './pyaterochka-horizontal-logo.svg',
+    'Пятёрочка': './pyaterochka-logo.svg',
     'Чижик': './chizhik-horizontal-logo.svg'
   };
 

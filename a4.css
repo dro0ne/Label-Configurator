@@ -67,7 +67,7 @@ body.lc-a4-open{overflow:hidden}
 .a4-objbar button[hidden]{display:none}
 
 /* Кнопка A4 в блоке размеров */
-[data-testid="grid-sizes"] .lc-a4-size-btn{border-style:dashed!important}
+
 
 @media (max-width:640px){
   .a4-top{padding:8px 10px}
