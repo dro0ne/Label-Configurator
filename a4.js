@@ -231,6 +231,7 @@
   function selectObj(obj) {
     if (selectedObj) selectedObj.classList.remove('is-selected');
     selectedObj = obj;
+    updateSizeBox();
     if (!obj) { objBar.hidden = true; return; }
     obj.classList.add('is-selected');
     var kind = obj.getAttribute('data-kind');
@@ -247,18 +248,78 @@
   function objAction(act) {
     if (!selectedObj) return;
     var w = parseFloat(selectedObj.style.width) || 50;
-    if (act === 'bigger') selectedObj.style.width = Math.min(190, w * 1.15).toFixed(1) + 'mm';
+    var maxW = landscape() ? 260 : 174;
+    if (act === 'bigger') selectedObj.style.width = Math.min(maxW, w * 1.15).toFixed(1) + 'mm';
     if (act === 'smaller') selectedObj.style.width = Math.max(10, w / 1.15).toFixed(1) + 'mm';
+    if (act === 'bigger' || act === 'smaller') updateSizeBox();
     if (act === 'delete') { var wasLogo = selectedObj.getAttribute('data-role') === 'logo' && blockOf(selectedObj); selectedObj.remove(); selectObj(null); if (wasLogo && !wasLogo.textContent.trim() && !wasLogo.querySelector('.a4-obj')) wasLogo.remove(); tidyCodes(); updateToolbar(); }
     if (act === 'edit') {
       var kind = selectedObj.getAttribute('data-kind'), old = selectedObj.getAttribute('data-value');
       var v = window.prompt(kind === 'qr' ? 'Что зашить в QR:' : 'Значение штрихкода:', old);
       if (v && v.trim()) {
-        var tmp = document.createElement('div'); tmp.innerHTML = objHtml(kind, v.trim(), w, selectedObj.getAttribute('data-role'));
-        if (tmp.firstChild) { selectedObj.replaceWith(tmp.firstChild); selectObj(null); }
+        var role = selectedObj.getAttribute('data-role');
+        var lineRole = role === 'barcode' ? 'inv' : (role === 'qr' ? 'sn' : null);
+        var linked = lineRole && lineValue(lineRole) === old;
+        var tmp = document.createElement('div'); tmp.innerHTML = objHtml(kind, v.trim(), w, role);
+        if (tmp.firstChild) {
+          selectedObj.replaceWith(tmp.firstChild); selectObj(null);
+          if (linked) setLineValue(lineRole, v.trim());
+        } else alert('Штрихкод Code128 понимает только латиницу, цифры и знаки — без русских букв.');
       }
     }
     scheduleSave(); placeObjBar();
+  }
+
+  /* ── Размер выбранного объекта в верхней панели ─────────────────── */
+  var KIND_NAMES = { logo: 'логотип', barcode: 'штрихкод', qr: 'QR', image: 'картинка' };
+  function updateSizeBox() {
+    if (!root) return;
+    var box = root.querySelector('.a4-sizebox'); if (!box) return;
+    var on = !!(selectedObj && page.contains(selectedObj));
+    box.classList.toggle('is-disabled', !on);
+    Array.from(box.querySelectorAll('button')).forEach(function (b) { b.disabled = !on; });
+    var val = box.querySelector('.a4-size-val');
+    if (on) {
+      val.textContent = Math.round(parseFloat(selectedObj.style.width) || 0) + ' мм';
+      box.title = 'Размер: ' + (KIND_NAMES[selectedObj.getAttribute('data-kind')] || 'объект');
+    } else {
+      val.textContent = 'нажмите на логотип или код';
+      box.title = 'Сначала нажмите на логотип, штрихкод или QR на листе';
+    }
+  }
+
+  /* ── Строки «Инв: …» / «S/N: …» связаны со штрихкодом и QR ──────── */
+  var LINE_PREFIX = { inv: /^\s*Инв\.?\s*:?\s*/i, sn: /^\s*S\s*\/\s*N\s*:?\s*/i };
+  var LINE_CODE = { inv: 'barcode', sn: 'qr' };
+  function lineValue(role) {
+    var p = page.querySelector('p[data-role="' + role + '"]');
+    return p ? p.textContent.replace(/​/g, '').replace(LINE_PREFIX[role], '').trim() : null;
+  }
+  function setLineValue(role, value) {
+    var p = page.querySelector('p[data-role="' + role + '"]'); if (!p) return;
+    var label = role === 'inv' ? 'Инв:' : 'S/N:';
+    var span = p.querySelector('span') || p;
+    span.innerHTML = '<b>' + label + '</b> ' + esc(value);
+  }
+  var syncTimer = null;
+  function syncCodesFromText() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () {
+      var warn = root.querySelector('.a4-warn'), bad = false;
+      ['inv', 'sn'].forEach(function (role) {
+        var v = lineValue(role); if (!v) return;
+        var obj = page.querySelector('.a4-obj[data-role="' + LINE_CODE[role] + '"]'); if (!obj) return;
+        if (obj.getAttribute('data-value') === v) return;
+        var html = objHtml(obj.getAttribute('data-kind'), v, parseFloat(obj.style.width) || 50, LINE_CODE[role]);
+        if (!html) { bad = true; return; }
+        var tmp = document.createElement('div'); tmp.innerHTML = html;
+        var wasSelected = obj === selectedObj;
+        obj.replaceWith(tmp.firstChild);
+        if (wasSelected) selectObj(page.querySelector('.a4-obj[data-role="' + LINE_CODE[role] + '"]'));
+        scheduleSave();
+      });
+      warn.hidden = !bad;
+    }, 350);
   }
 
   /* ── Сохранение ────────────────────────────────────────────────── */
@@ -327,7 +388,7 @@
     root.innerHTML =
       '<div class="a4-top">' +
         '<button type="button" class="a4-btn a4-back" data-act="close">' + ico('<path d="M15 18l-6-6 6-6"/>') + '<span>К этикеткам</span></button>' +
-        '<div class="a4-title"><b>Лист A4</b><span class="a4-saved">Сохранено</span></div>' +
+        '<div class="a4-title"><b>Лист A4</b><span class="a4-saved">Сохранено</span><span class="a4-warn" role="alert" hidden>Штрихкод не обновлён: в Инв только латиница, цифры и знаки</span></div>' +
         '<button type="button" class="a4-btn a4-print" data-act="print">' + ico('<path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/>') + '<span>Печать A4</span></button>' +
       '</div>' +
       '<div class="a4-hint" role="status" hidden>' + ico('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>') +
@@ -353,6 +414,12 @@
         '<div class="a4-group">' +
           '<button type="button" class="a4-tb a4-wide" data-orient="portrait" title="Книжная">' + ico('<rect x="6" y="3" width="12" height="18" rx="1.5"/>') + '<span>Книжная</span></button>' +
           '<button type="button" class="a4-tb a4-wide" data-orient="landscape" title="Альбомная">' + ico('<rect x="3" y="6" width="18" height="12" rx="1.5"/>') + '<span>Альбомная</span></button>' +
+        '</div>' +
+        '<div class="a4-group a4-sizebox is-disabled">' +
+          '<span class="a4-label">Размер:</span>' +
+          '<button type="button" class="a4-tb a4-pm" data-act="smaller" title="Уменьшить выбранный логотип / код" aria-label="Уменьшить" disabled>−</button>' +
+          '<span class="a4-size-val">нажмите на логотип или код</span>' +
+          '<button type="button" class="a4-tb a4-pm" data-act="bigger" title="Увеличить выбранный логотип / код" aria-label="Увеличить" disabled>+</button>' +
         '</div>' +
         '<div class="a4-group a4-insert">' +
           '<span class="a4-label">На листе:</span>' +
@@ -411,7 +478,7 @@
       }
       if (b.hasAttribute('data-orient')) { setOrientation(b.getAttribute('data-orient'), true); return; }
       var act = b.getAttribute('data-act');
-      if (b.closest('.a4-objbar')) { objAction(act); return; }
+      if (b.closest('.a4-objbar') || act === 'smaller' || act === 'bigger') { objAction(act); return; }
       if (act === 'close') close();
       else if (act === 'print') printA4();
       else if (act === 'reset') { if (confirm('Собрать лист заново из текущей этикетки? Текущий лист будет заменён.')) libs().then(function () { page.innerHTML = labelBlockHtml(); savedRange = null; scheduleSave(); updateToolbar(); }); }
@@ -437,7 +504,7 @@
     page.addEventListener('click', function (e) {
       var o = e.target.closest('.a4-obj'); selectObj(o && page.contains(o) ? o : null);
     });
-    page.addEventListener('input', function () { scheduleSave(); updateToolbar(); });
+    page.addEventListener('input', function () { scheduleSave(); updateToolbar(); syncCodesFromText(); });
     page.addEventListener('keydown', function (e) {
       if (selectedObj && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); objAction('delete'); }
     });
@@ -451,7 +518,7 @@
   function open() {
     if (!root) build();
     root.hidden = false; document.body.classList.add('lc-a4-open');
-    fitZoom(); updateToolbar();
+    fitZoom(); updateToolbar(); updateSizeBox();
     libs().catch(function () {}); /* подгружаем заранее */
     setTimeout(function () { page.focus(); }, 50);
   }

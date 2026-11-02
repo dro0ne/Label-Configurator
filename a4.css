@@ -93,3 +93,14 @@ body.lc-a4-open{overflow:hidden}
   body.lc-a4-printing #lc-a4 .a4-obj{outline:0!important}
   body.lc-a4-printing #lc-a4,body.lc-a4-printing #lc-a4 *{visibility:visible!important}
 }
+
+/* Размер выбранного логотипа / кода в верхней панели */
+.a4-sizebox .a4-pm{width:34px;padding:0;font:700 1.15rem/1 inherit;border-color:var(--a4-border)}
+.a4-size-val{min-width:58px;padding:0 4px;text-align:center;font:600 .85rem/1 ui-monospace,Consolas,monospace;white-space:nowrap}
+.a4-sizebox.is-disabled .a4-size-val{font:400 .75rem/1.2 inherit;color:var(--a4-muted);min-width:0;max-width:150px;white-space:normal}
+.a4-sizebox .a4-pm:disabled{opacity:.4;cursor:default}
+.a4-sizebox .a4-pm:disabled:hover{background:transparent}
+@media (max-width:640px){.a4-sizebox.is-disabled .a4-size-val{display:none}}
+.a4-warn{padding:3px 8px;border-radius:6px;background:#fdecec;color:#a61b1b;font-size:.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="dark"] .a4-warn{background:#3a2224;color:#f2b8b8}
+.a4-warn[hidden]{display:none}
