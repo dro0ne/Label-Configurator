@@ -1,34 +1,56 @@
+/* Цвета дополнений: светлая тема по умолчанию, тёмная — при html[data-theme="dark"] */
+:root{
+  --lc-ico:#0b7f84;--lc-ico-barcode:#079297;--lc-ico-qr:#6742a8;--lc-ico-text:#315da9;
+  --lc-chip-border:#d5dde5;--lc-chip-active:#01696f;--lc-chip-ring:rgba(1,105,111,.22);
+  --lc-pc-bg:#f2f6ff;--lc-pc-border:#b8c9ec;--lc-pc-fg:#315eaa;--lc-pc-num:#0f172a;--lc-pc-muted:#64748b;--lc-pc-hover:#315eaa;
+  --lc-toast-bg:#effaf3;--lc-toast-border:#9fd8b5;--lc-toast-fg:#14532d;--lc-toast-ico:#15803d;--lc-bump:#15803d;
+}
+html[data-theme="dark"]{
+  --lc-ico:#8fb3dc;--lc-ico-barcode:#7cc3bb;--lc-ico-qr:#b4a5d6;--lc-ico-text:#8fb3dc;
+  --lc-chip-border:#3a424c;--lc-chip-active:#71a0d9;--lc-chip-ring:rgba(113,160,217,.3);
+  --lc-pc-bg:#232a33;--lc-pc-border:#3a4552;--lc-pc-fg:#a9c1dc;--lc-pc-num:#e6e9ed;--lc-pc-muted:#8b97a6;--lc-pc-hover:#71a0d9;
+  --lc-toast-bg:#1d2a24;--lc-toast-border:#3d5e4c;--lc-toast-fg:#d3e8dc;--lc-toast-ico:#8fd0a8;--lc-bump:#8fd0a8;
+}
+
 /* Иконки у подписей */
-.lc-ico{width:15px;height:15px;flex:0 0 auto;vertical-align:-3px;color:#6fb2f2}
+.lc-ico{width:15px;height:15px;flex:0 0 auto;vertical-align:-3px;color:var(--lc-ico)}
 .lc-has-ico{display:inline-flex!important;align-items:center;gap:7px}
 label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
 .lc-group-header.lc-hdr-ico::before{display:none!important}
 .lc-group-header .lc-group-ico{width:18px;height:18px;margin-right:2px}
-.lc-group-barcode .lc-group-ico{color:#4fd1c5}
-.lc-group-qr .lc-group-ico{color:#b794f4}
-.lc-group-text .lc-group-ico{color:#63b3ed}
+.lc-group-barcode .lc-group-ico{color:var(--lc-ico-barcode)}
+.lc-group-qr .lc-group-ico{color:var(--lc-ico-qr)}
+.lc-group-text .lc-group-ico{color:var(--lc-ico-text)}
 
 /* Логотипы на кнопках магазинов */
-[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{height:32px!important;padding:4px 10px!important;border-radius:9px!important;background:#fff!important;border:2px solid #2a3b4f!important;opacity:.82;transition:opacity .15s,border-color .15s,box-shadow .15s!important}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{height:32px!important;padding:4px 10px!important;border-radius:9px!important;background:#fff!important;border:2px solid var(--lc-chip-border)!important;opacity:.82;transition:opacity .15s,border-color .15s,box-shadow .15s!important}
 [data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip:hover{opacity:1}
-[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{opacity:1;border-color:#4b9cff!important;box-shadow:0 0 0 3px rgba(75,156,255,.35)!important}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{opacity:1;border-color:var(--lc-chip-active)!important;box-shadow:0 0 0 3px var(--lc-chip-ring)!important}
 .lc-chip-logo{display:block;height:18px;width:auto;max-width:96px;object-fit:contain;pointer-events:none}
 [data-testid="store-tags-row"] button:not([data-logo]){height:32px!important}
 
 /* Счётчик печати */
-.lc-print-counter{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border:1px solid #294969;border-radius:10px;background:#0d2740;color:#9fcbff;font:600 .76rem/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
-.lc-print-counter .lc-ico{width:16px;height:16px;color:#72b8ff}
-.lc-print-counter .lc-pc-today{font:700 .9rem/1 ui-monospace,Consolas,monospace;color:#fff;min-width:1ch;text-align:right}
-.lc-print-counter .lc-pc-label{color:#7f9cbb;font-weight:500}
-.lc-print-counter:hover{border-color:#4b9cff}
+.lc-print-counter{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border:1px solid var(--lc-pc-border);border-radius:10px;background:var(--lc-pc-bg);color:var(--lc-pc-fg);font:600 .76rem/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.lc-print-counter .lc-ico{width:16px;height:16px;color:var(--lc-pc-fg)}
+.lc-print-counter .lc-pc-today{font:700 .9rem/1 ui-monospace,Consolas,monospace;color:var(--lc-pc-num);min-width:1ch;text-align:right}
+.lc-print-counter .lc-pc-label{color:var(--lc-pc-muted);font-weight:500}
+.lc-print-counter:hover{border-color:var(--lc-pc-hover)}
 .lc-print-counter.lc-bump .lc-pc-today{animation:lc-bump .6s ease}
-@keyframes lc-bump{0%{transform:scale(1)}35%{transform:scale(1.45);color:#7CFFB2}100%{transform:scale(1)}}
+@keyframes lc-bump{0%{transform:scale(1)}35%{transform:scale(1.45);color:var(--lc-bump)}100%{transform:scale(1)}}
 
-.lc-toast{position:fixed;left:50%;bottom:22px;z-index:100001;display:flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:11px 16px;border:1px solid #2f6b4b;border-radius:12px;background:#0f2a1f;color:#d6ffe6;font:600 .85rem/1.3 Inter,system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.5);transform:translate(-50%,140%);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none}
+.lc-toast{position:fixed;left:50%;bottom:22px;z-index:100001;display:flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:11px 16px;border:1px solid var(--lc-toast-border);border-radius:12px;background:var(--lc-toast-bg);color:var(--lc-toast-fg);font:600 .85rem/1.3 Inter,system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.25);transform:translate(-50%,140%);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none}
 .lc-toast.show{transform:translate(-50%,0);opacity:1}
-.lc-toast .lc-ico{color:#7CFFB2;width:18px;height:18px}
+.lc-toast .lc-ico{color:var(--lc-toast-ico);width:18px;height:18px}
 
 @media (max-width:680px){[data-testid="page-configurator"] [data-testid="button-batch-print"]{display:inline-flex!important}}
+/* Окно «Печать списка»: карточка автовыбора на всю ширину (в обеих темах) */
+.lc-batch-mode-auto{grid-column:1/-1!important}
+
+/* Переключатель темы */
+.lc-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;border:1px solid var(--lc-pc-border);border-radius:10px;background:var(--lc-pc-bg);color:var(--lc-pc-fg);cursor:pointer}
+.lc-theme-toggle:hover{border-color:var(--lc-pc-hover)}
+.lc-theme-toggle .lc-ico{width:18px;height:18px;color:currentColor}
+
 /* Телефон: кнопка «Печать» не вылезает за экран */
 @media (max-width:520px){
   [data-testid="page-configurator"]>header{gap:8px}
@@ -37,10 +59,11 @@ label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
   [data-testid="button-print"] svg,[data-testid="button-batch-print"] svg{margin:0!important}
   [data-testid="badge-size"]{display:none!important}
   .lc-print-counter{height:44px;padding:0 9px}
+  .lc-theme-toggle{width:44px;height:44px}
   .lc-print-counter .lc-pc-label{display:none}
 }
 
-@media print{.lc-toast,.lc-print-counter{display:none!important}}
+@media print{.lc-toast,.lc-print-counter,.lc-theme-toggle{display:none!important}}
 @media (prefers-reduced-motion:reduce){.lc-print-counter.lc-bump .lc-pc-today{animation:none}.lc-toast{transition:none}}
 
 /* Пакетная печать: штрихкод ужимается по высоте, а номер под ним всегда виден */

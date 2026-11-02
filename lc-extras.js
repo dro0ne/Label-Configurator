@@ -20,6 +20,8 @@
     gap: '<path d="M4 5h16M4 19h16M12 8v8M9 10l3-2 3 2M9 14l3 2 3-2"/>',
     shield: '<path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/>',
     list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
     printer: '<path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/>'
   };
   function icon(name, cls) {
@@ -87,6 +89,47 @@
       batchBtn.insertAdjacentHTML('afterbegin', icon('list'));
     }
     injectCounter();
+    injectThemeToggle();
+  }
+
+  /* ── Светлая / тёмная тема ──────────────────────────────────────── */
+  var themeBtn = null;
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function savedTheme() { try { return localStorage.getItem('lc-theme'); } catch (e) { return null; } }
+  function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+  function applyTheme(saved) {
+    var dark = saved ? saved === 'dark' : !!(mq && mq.matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var link = document.getElementById('theme-dark');
+    if (link) link.media = saved ? (dark ? 'all' : 'not all') : '(prefers-color-scheme: dark)';
+    renderThemeBtn();
+  }
+  function renderThemeBtn() {
+    if (!themeBtn) return;
+    var dark = isDark();
+    themeBtn.innerHTML = icon(dark ? 'sun' : 'moon');
+    var label = dark ? 'Включить светлую тему' : 'Включить тёмную тему';
+    themeBtn.title = label; themeBtn.setAttribute('aria-label', label);
+  }
+  function injectThemeToggle() {
+    if (themeBtn && document.body.contains(themeBtn)) return;
+    var anchor = counterEl && document.body.contains(counterEl) ? counterEl : document.querySelector('[data-testid="badge-size"]');
+    if (!anchor || !anchor.parentElement) return;
+    themeBtn = document.createElement('button');
+    themeBtn.type = 'button';
+    themeBtn.className = 'lc-theme-toggle';
+    themeBtn.setAttribute('data-testid', 'button-theme');
+    themeBtn.addEventListener('click', function () {
+      var next = isDark() ? 'light' : 'dark';
+      try { localStorage.setItem('lc-theme', next); } catch (e) {}
+      applyTheme(next);
+    });
+    anchor.parentElement.insertBefore(themeBtn, anchor);
+    renderThemeBtn();
+  }
+  if (mq) {
+    var onSystem = function () { if (!savedTheme()) applyTheme(null); };
+    if (mq.addEventListener) mq.addEventListener('change', onSystem); else if (mq.addListener) mq.addListener(onSystem);
   }
 
   /* ── Счётчик печати ─────────────────────────────────────────────── */

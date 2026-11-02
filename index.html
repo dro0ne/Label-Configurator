@@ -16,12 +16,25 @@
     <script type="module" crossorigin src="./assets/index-DQzgibq4.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-BDEpssnV.css">
     <link rel="stylesheet" href="./modern-design.css?v=20260803-4">
-    <link rel="stylesheet" href="./x5-redesign.css?v=20260822-20">
-    <link rel="stylesheet" href="./lc-extras.css?v=20261102-1">
+    <script>
+      /* Тема: сохранённый выбор, иначе — как в системе. Выполняется до отрисовки, чтобы не мигало. */
+      (function () {
+        var saved = null;
+        try { saved = localStorage.getItem('lc-theme'); } catch (e) {}
+        var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        var dark = saved ? saved === 'dark' : !!(mq && mq.matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        window.__lcThemeMedia = saved ? (dark ? 'all' : 'not all') : '(prefers-color-scheme: dark)';
+      })();
+    </script>
+    <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-1">
+    <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
+    <link rel="stylesheet" href="./print-layout.css?v=20261102-1">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261102-2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
-    <script defer src="./lc-extras.js?v=20261102-1"></script>
+    <script defer src="./lc-extras.js?v=20261102-2"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1190,7 +1203,7 @@
     var footer = document.createElement('div'); footer.className = 'lc-print-sheet-footer';
     if (logo && logo.src) {
       var logoImage = logo.node ? logo.node.cloneNode(true) : document.createElement('img');
-      logoImage.removeAttribute('id'); logoImage.removeAttribute('style'); logoImage.className = 'lc-print-sheet-logo'; logoImage.src = logo.src; logoImage.alt = logo.alt || ''; footer.appendChild(logoImage);
+      logoImage.removeAttribute('id'); logoImage.removeAttribute('style'); logoImage.className = 'lc-print-sheet-logo'; logoImage.src = logo.src; logoImage.alt = logo.alt || ''; logoImage.style.setProperty('filter', logo.alt === 'Перекрёсток' ? 'url(#lc-threshold-dark)' : 'url(#lc-threshold)', 'important'); footer.appendChild(logoImage);
     } else {
       var storeInput = field('store'); footer.textContent = storeInput ? storeInput.value : '';
     }
