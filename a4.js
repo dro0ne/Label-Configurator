@@ -481,7 +481,7 @@
       '</section>';
     root.appendChild(batchDlg);
     var ta = batchDlg.querySelector('textarea');
-    try { ta.value = localStorage.getItem('lc-a4-batch-text') || ''; } catch (e) {}
+    try { localStorage.removeItem('lc-a4-batch-text'); } catch (e) {} /* список не запоминаем */
     batchDlg.addEventListener('click', function (e) {
       if (e.target === batchDlg) { closeBatch(); return; }
       var b = e.target.closest('[data-dlg]'); if (!b) return;
@@ -498,7 +498,6 @@
   function runBatch() {
     var ta = batchDlg.querySelector('textarea'), status = batchDlg.querySelector('.a4-dlg-status');
     var mode = batchDlg.querySelector('[name="a4-batch-mode"]:checked').value;
-    try { localStorage.setItem('lc-a4-batch-text', ta.value); } catch (e) {}
     var err = function (t) { status.className = 'a4-dlg-status is-error'; status.textContent = t; };
     if (!window.__lcParseRows) { err('Не удалось прочитать список. Обновите страницу.'); return; }
     var parsed = window.__lcParseRows(ta.value, mode);
