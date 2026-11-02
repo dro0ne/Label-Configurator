@@ -17,9 +17,11 @@
     <link rel="stylesheet" crossorigin href="./assets/index-BDEpssnV.css">
     <link rel="stylesheet" href="./modern-design.css?v=20260803-4">
     <link rel="stylesheet" href="./x5-redesign.css?v=20260822-20">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261102-1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
+    <script defer src="./lc-extras.js?v=20261102-1"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -793,6 +795,8 @@
     if (!row) return;
     Array.from(row.querySelectorAll('button[data-logo]')).forEach(function (btn) {
       var isActive = btn.getAttribute('data-logo') === activeName;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       btn.style.background  = isActive ? 'hsl(var(--primary))' : 'hsl(var(--secondary))';
       btn.style.color       = isActive ? 'hsl(var(--primary-foreground))' : 'hsl(var(--secondary-foreground))';
       btn.style.borderColor = isActive ? 'hsl(var(--primary))' : 'hsl(var(--border))';
@@ -1099,7 +1103,7 @@
 
   function detectCodeType(value) {
     var code = String(value || '').trim();
-    return /^(?:s\s*\/?\s*n|sn|serial|ser(?:ial)?|СЃРµСЂ|СЃРЅ)[\s:._-]*/i.test(code) ? 'serial' : 'inventory';
+    return (/^(?:s\s*\/?\s*n|serial|ser)(?=[\s:.№#_-]|\d)/i.test(code) || /^(?:сер|с\s*\/\s*н|сн)(?=[\s:.№#_-])/i.test(code)) ? 'serial' : 'inventory';
   }
 
   function cleanBatchCell(value) {
@@ -1138,9 +1142,30 @@
     }));
   }
 
+  /* Физический размер листа = выбранный размер этикетки (а не всегда 58×40). */
+  function applySheetSize(sheet, source) {
+    var PX_TO_MM = 25.4 / 96;
+    var w = 58, h = 40;
+    if (source) {
+      var sw = parseFloat(source.style.width), sh = parseFloat(source.style.height);
+      if (sw > 0 && sh > 0) { w = sw * PX_TO_MM; h = sh * PX_TO_MM; }
+    }
+    var portrait = h > w * 1.2;
+    var k = portrait ? Math.min(w / 50, h / 62) : Math.min(w / 58, h / 40);
+    sheet.classList.toggle('lc-portrait', portrait);
+    var safeText = document.querySelector('[data-testid="text-safe-margin"]');
+    var pad = safeText ? parseFloat(String(safeText.textContent).replace(',', '.')) : NaN;
+    if (!(pad >= 0 && pad <= 10)) pad = 3;
+    sheet.style.setProperty('--sheet-w', w.toFixed(2) + 'mm');
+    sheet.style.setProperty('--sheet-h', h.toFixed(2) + 'mm');
+    sheet.style.setProperty('--sheet-pad', pad + 'mm');
+    sheet.style.setProperty('--k', k.toFixed(3));
+  }
+
   function createPrintSheet(source, row, logo) {
     var sheet = document.createElement('section');
     sheet.className = 'lc-print-label lc-print-sheet lc-mode-' + row.mode;
+    applySheetSize(sheet, source);
 
     var header = document.createElement('div'); header.className = 'lc-print-sheet-header';
     var titleLine = document.createElement('div'); titleLine.className = 'lc-print-sheet-title'; titleLine.textContent = row.title;
@@ -1152,7 +1177,7 @@
     if (row.inventory) {
       var barcodeSource = source.querySelector('[data-testid="preview-barcode"]');
       if (barcodeSource) {
-        var barcode = barcodeSource.cloneNode(true); barcode.className = 'lc-print-sheet-barcode'; barcode.removeAttribute('style');
+        var barcode = barcodeSource.cloneNode(true); barcode.className = 'lc-print-sheet-barcode'; barcode.removeAttribute('style'); var barcodeSvg = barcode.querySelector('svg'); if (barcodeSvg) barcodeSvg.setAttribute('preserveAspectRatio', 'none');
         var oldTexts = barcode.querySelectorAll('svg text'); Array.from(oldTexts).forEach(function (node) { node.remove(); });
         var value = document.createElement('span'); value.className = 'lc-print-sheet-code-value'; value.textContent = row.inventory; barcode.appendChild(value); codes.appendChild(barcode);
       }

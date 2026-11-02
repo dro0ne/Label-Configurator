@@ -1,0 +1,57 @@
+/* Иконки у подписей */
+.lc-ico{width:15px;height:15px;flex:0 0 auto;vertical-align:-3px;color:#6fb2f2}
+.lc-has-ico{display:inline-flex!important;align-items:center;gap:7px}
+label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
+.lc-group-header.lc-hdr-ico::before{display:none!important}
+.lc-group-header .lc-group-ico{width:18px;height:18px;margin-right:2px}
+.lc-group-barcode .lc-group-ico{color:#4fd1c5}
+.lc-group-qr .lc-group-ico{color:#b794f4}
+.lc-group-text .lc-group-ico{color:#63b3ed}
+
+/* Логотипы на кнопках магазинов */
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{height:32px!important;padding:4px 10px!important;border-radius:9px!important;background:#fff!important;border:2px solid #2a3b4f!important;opacity:.82;transition:opacity .15s,border-color .15s,box-shadow .15s!important}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip:hover{opacity:1}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{opacity:1;border-color:#4b9cff!important;box-shadow:0 0 0 3px rgba(75,156,255,.35)!important}
+.lc-chip-logo{display:block;height:18px;width:auto;max-width:96px;object-fit:contain;pointer-events:none}
+[data-testid="store-tags-row"] button:not([data-logo]){height:32px!important}
+
+/* Счётчик печати */
+.lc-print-counter{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border:1px solid #294969;border-radius:10px;background:#0d2740;color:#9fcbff;font:600 .76rem/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.lc-print-counter .lc-ico{width:16px;height:16px;color:#72b8ff}
+.lc-print-counter .lc-pc-today{font:700 .9rem/1 ui-monospace,Consolas,monospace;color:#fff;min-width:1ch;text-align:right}
+.lc-print-counter .lc-pc-label{color:#7f9cbb;font-weight:500}
+.lc-print-counter:hover{border-color:#4b9cff}
+.lc-print-counter.lc-bump .lc-pc-today{animation:lc-bump .6s ease}
+@keyframes lc-bump{0%{transform:scale(1)}35%{transform:scale(1.45);color:#7CFFB2}100%{transform:scale(1)}}
+
+.lc-toast{position:fixed;left:50%;bottom:22px;z-index:100001;display:flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:11px 16px;border:1px solid #2f6b4b;border-radius:12px;background:#0f2a1f;color:#d6ffe6;font:600 .85rem/1.3 Inter,system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.5);transform:translate(-50%,140%);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none}
+.lc-toast.show{transform:translate(-50%,0);opacity:1}
+.lc-toast .lc-ico{color:#7CFFB2;width:18px;height:18px}
+
+@media (max-width:680px){[data-testid="page-configurator"] [data-testid="button-batch-print"]{display:inline-flex!important}}
+/* Телефон: кнопка «Печать» не вылезает за экран */
+@media (max-width:520px){
+  [data-testid="page-configurator"]>header{gap:8px}
+  [data-testid="button-print"],[data-testid="button-batch-print"]{font-size:0!important;width:44px!important;min-width:44px!important;padding:0!important;justify-content:center!important}
+  [data-testid="button-print"] span,[data-testid="button-batch-print"] span{display:none!important}
+  [data-testid="button-print"] svg,[data-testid="button-batch-print"] svg{margin:0!important}
+  [data-testid="badge-size"]{display:none!important}
+  .lc-print-counter{height:44px;padding:0 9px}
+  .lc-print-counter .lc-pc-label{display:none}
+}
+
+@media print{.lc-toast,.lc-print-counter{display:none!important}}
+@media (prefers-reduced-motion:reduce){.lc-print-counter.lc-bump .lc-pc-today{animation:none}.lc-toast{transition:none}}
+
+/* Пакетная печать: штрихкод ужимается по высоте, а номер под ним всегда виден */
+@media print{
+  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-codes{height:100%!important}
+  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-barcode{height:100%!important}
+  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-barcode svg{flex:1 1 0!important;min-height:0!important;height:auto!important;max-height:calc(14mm * var(--k,1))!important}
+  /* Портретные этикетки (100×150, 58×60): коды друг под другом */
+  #print-batch-root .lc-print-label.lc-print-sheet.lc-portrait{grid-template-rows:auto minmax(0,1fr) calc(8mm * var(--k,1))!important}
+  #print-batch-root .lc-portrait .lc-print-sheet-codes{flex-direction:column!important;gap:calc(2mm * var(--k,1))!important}
+  #print-batch-root .lc-portrait.lc-mode-full .lc-print-sheet-barcode,#print-batch-root .lc-portrait.lc-mode-inventory .lc-print-sheet-barcode{flex:1 1 0!important;width:100%!important;max-width:calc(46mm * var(--k,1))!important;height:auto!important;min-height:0!important}
+  #print-batch-root .lc-portrait.lc-mode-full .lc-print-sheet-qr{flex:0 0 auto!important;width:calc(20mm * var(--k,1))!important;height:calc(20mm * var(--k,1))!important}
+  #print-batch-root .lc-portrait.lc-mode-serial .lc-print-sheet-qr{width:calc(30mm * var(--k,1))!important;height:calc(30mm * var(--k,1))!important}
+}
