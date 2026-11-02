@@ -72,8 +72,12 @@ html:not([data-theme="dark"]) [data-testid="page-configurator"]>header{border-bo
 /* «Печать списка»: автовыбор на всю ширину, ниже «Только инвентарник» и «Только серийник» */
 @media (min-width:621px){.lc-batch-modes.lc-batch-modes-3{grid-template-columns:1fr 1fr!important}}
 
-/* «Типографика» как в Word: старые слайдеры (к старой раскладке) скрыты */
-.lt-container>.lc-group,.lt-container>.lc-divider{display:none!important}
+/* «Типографика» в прежнем виде: старые ползунки к старой раскладке скрыты, новые — в тех же блоках */
+.lc-group-body>.lt-old{display:none!important}
+.lc-group-body>.lt-item>.lt-inline{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;margin:8px 0 0!important}
+.lc-group-body>.lt-item>.lt-inline:first-child{margin-top:0}
+.lc-group-body>.lt-item>.lt-inline>.lt-seg{display:inline-flex!important;flex:0 0 auto!important;width:auto!important}
+[data-testid="panel-settings"] .lt-foot .lt-reset{border:0!important;background:none!important;box-shadow:none!important;padding:4px!important;height:auto!important;min-height:0!important;color:var(--lc-pc-fg)!important;text-decoration:underline!important;font-size:.75rem!important}
 .lt-panel{display:flex;flex-direction:column;gap:6px}
 .lt-head{margin:6px 0 2px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--lc-pc-muted)}
 .lt-head:first-child{margin-top:0}
