@@ -188,6 +188,7 @@
      сколько этикеток отправлено в диалог печати (одиночная = 1, список = число строк). */
   var pending = 0;
   window.addEventListener('beforeprint', function () {
+    if (document.body.classList.contains('lc-a4-printing')) { pending = 0; return; }
     var batch = document.querySelector('body.lc-batch-printing #print-batch-root');
     pending = batch ? batch.querySelectorAll('.lc-print-label').length : 1;
   });

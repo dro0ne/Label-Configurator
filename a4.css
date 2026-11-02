@@ -1,0 +1,87 @@
+/* Лист A4 «как в Word» */
+#lc-a4{
+  --a4-bg:#eef1f5;--a4-bar:#ffffff;--a4-border:#dfe5ec;--a4-fg:#1f2933;--a4-muted:#64748b;
+  --a4-btn:#f5f7fa;--a4-btn-hover:#e9eef4;--a4-on:#d8eef0;--a4-on-fg:#01696f;--a4-accent:#01696f;--a4-accent-fg:#fff;
+  --a4-hint-bg:#fff8e6;--a4-hint-border:#f0c36a;--a4-hint-fg:#744d08;
+  position:fixed;inset:0;z-index:99990;display:flex;flex-direction:column;background:var(--a4-bg);color:var(--a4-fg);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+html[data-theme="dark"] #lc-a4{
+  --a4-bg:#15181c;--a4-bar:#1f2328;--a4-border:#373f47;--a4-fg:#dce1e7;--a4-muted:#99a7b8;
+  --a4-btn:#262b31;--a4-btn-hover:#2e343b;--a4-on:#2b3a4a;--a4-on-fg:#a9c8ea;--a4-accent:#4f88c2;--a4-accent-fg:#fff;
+  --a4-hint-bg:#2e2a1d;--a4-hint-border:#6b5a2c;--a4-hint-fg:#ecd9a6;
+}
+#lc-a4[hidden]{display:none}
+body.lc-a4-open{overflow:hidden}
+
+#lc-a4 .a4-top svg,#lc-a4 .a4-toolbar svg,#lc-a4 .a4-hint svg{width:18px;height:18px;flex:0 0 auto}
+.a4-top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--a4-bar);border-bottom:1px solid var(--a4-border)}
+.a4-title{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0}
+.a4-title b{font-size:1rem}
+.a4-saved{font-size:.75rem;color:var(--a4-muted);white-space:nowrap}
+.a4-btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-btn);color:var(--a4-fg);font:600 .85rem/1 inherit;cursor:pointer}
+.a4-btn:hover{background:var(--a4-btn-hover)}
+.a4-print{background:var(--a4-accent);border-color:var(--a4-accent);color:var(--a4-accent-fg)}
+.a4-print:hover{background:var(--a4-accent);filter:brightness(1.08)}
+
+.a4-hint{display:flex;align-items:center;gap:10px;margin:10px 16px 0;padding:10px 14px;border:1px solid var(--a4-hint-border);border-radius:10px;background:var(--a4-hint-bg);color:var(--a4-hint-fg);font-size:.85rem;line-height:1.4}
+.a4-hint[hidden]{display:none}
+
+.a4-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 16px;background:var(--a4-bar);border-bottom:1px solid var(--a4-border)}
+.a4-group{display:flex;align-items:center;gap:3px;padding-right:8px;border-right:1px solid var(--a4-border)}
+.a4-group:last-child{border-right:0}
+.a4-label{font-size:.75rem;color:var(--a4-muted);margin-right:4px}
+.a4-tb{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 8px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--a4-fg);font:500 .85rem/1 inherit;cursor:pointer}
+.a4-tb:hover{background:var(--a4-btn-hover)}
+.a4-tb.is-on{background:var(--a4-on);color:var(--a4-on-fg);border-color:var(--a4-on)}
+.a4-tb:focus-visible,.a4-btn:focus-visible,.a4-size:focus-visible{outline:2px solid var(--a4-accent);outline-offset:1px}
+.a4-b,.a4-i,.a4-u{font-size:1rem;width:34px;padding:0}
+.a4-size{height:34px;padding:0 6px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font:500 .85rem inherit}
+.a4-logo-btn{background:#fff;border-color:var(--a4-border);padding:0 7px}
+.a4-logo-btn:hover{background:#fff;border-color:var(--a4-accent)}
+.a4-logo-btn img{display:block;height:16px;width:auto;max-width:78px}
+
+.a4-scroll{position:relative;flex:1;overflow:auto;padding:24px 16px 60px}
+.a4-zoom{width:210mm;margin:0 auto}
+.a4-page{box-sizing:border-box;width:210mm;min-height:297mm;padding:18mm 18mm 20mm;background:#fff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,.08),0 12px 40px rgba(0,0,0,.12);outline:0;font:14pt/1.35 Arial,Helvetica,sans-serif;overflow-wrap:anywhere;
+  background-image:linear-gradient(to bottom,transparent calc(297mm - 1px),rgba(1,105,111,.35) calc(297mm - 1px),rgba(1,105,111,.35) 297mm,transparent 297mm);background-size:100% 297mm}
+.a4-page p,.a4-page div{margin:0 0 .35em}
+.a4-page ul,.a4-page ol{margin:0 0 .35em;padding-left:1.4em}
+
+.a4-obj{display:inline-block;vertical-align:middle;max-width:100%;line-height:0;cursor:pointer;border-radius:3px;user-select:none}
+.a4-obj img,.a4-obj svg{display:block;width:100%;height:auto}
+.a4-obj:hover{outline:1px dashed rgba(1,105,111,.6);outline-offset:2px}
+.a4-obj.is-selected{outline:2px solid #0b8a90;outline-offset:2px}
+
+.a4-objbar{position:absolute;z-index:5;display:flex;gap:2px;padding:3px;border:1px solid var(--a4-border);border-radius:9px;background:var(--a4-bar);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.a4-objbar[hidden]{display:none}
+.a4-objbar button{width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:var(--a4-fg);font:700 1rem/1 inherit;cursor:pointer}
+.a4-objbar button:hover{background:var(--a4-btn-hover)}
+.a4-objbar button[hidden]{display:none}
+
+/* Кнопка A4 в блоке размеров */
+[data-testid="grid-sizes"] .lc-a4-size-btn{border-style:dashed!important}
+
+@media (max-width:640px){
+  .a4-top{padding:8px 10px}
+  .a4-btn span{display:none}
+  .a4-btn{width:44px;height:44px;padding:0;justify-content:center}
+  .a4-toolbar{padding:6px 8px;gap:4px;max-height:40vh;overflow:auto}
+  .a4-group{padding-right:4px}
+  .a4-tb{min-width:40px;height:40px}
+  .a4-wide span,.a4-label{display:none}
+  .a4-scroll{padding:12px 8px 40px}
+  .a4-hint{margin:8px 10px 0;font-size:.8rem}
+}
+
+/* Печать листа: только сам лист, без интерфейса */
+@media print{
+  body.lc-a4-printing>*:not(#lc-a4){display:none!important}
+  body.lc-a4-printing #lc-a4{position:static!important;display:block!important;background:#fff!important}
+  body.lc-a4-printing #lc-a4 .a4-top,body.lc-a4-printing #lc-a4 .a4-toolbar,body.lc-a4-printing #lc-a4 .a4-hint,body.lc-a4-printing #lc-a4 .a4-objbar{display:none!important}
+  body.lc-a4-printing #lc-a4 .a4-scroll{overflow:visible!important;padding:0!important}
+  body.lc-a4-printing #lc-a4 .a4-zoom{zoom:1!important;width:auto!important;margin:0!important}
+  body.lc-a4-printing #lc-a4 .a4-page{box-shadow:none!important;background-image:none!important;width:210mm!important;min-height:0!important}
+  body.lc-a4-printing #lc-a4 .a4-obj{outline:0!important}
+  body.lc-a4-printing #lc-a4,body.lc-a4-printing #lc-a4 *{visibility:visible!important}
+}
