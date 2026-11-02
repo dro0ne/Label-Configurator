@@ -218,13 +218,30 @@
     });
   }
 
+  /* ── Шапка листа: тема и формат, как на главной ────────────────── */
+  var SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var MOON = '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>';
+  function renderTopBar() {
+    if (!root) return;
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var tb = root.querySelector('[data-act="theme"]');
+    if (tb) {
+      tb.innerHTML = ico(dark ? SUN : MOON);
+      var label = dark ? 'Включить светлую тему' : 'Включить тёмную тему';
+      tb.title = label; tb.setAttribute('aria-label', label);
+    }
+    var badge = root.querySelector('.a4-badge');
+    if (badge) badge.textContent = 'A4 · ' + (landscape() ? 'альбомная' : 'книжная');
+  }
+  new MutationObserver(function () { renderTopBar(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
   /* ── Ориентация ────────────────────────────────────────────────── */
   var ORIENT_KEY = 'lc-a4-orient';
   function landscape() { return page.classList.contains('is-landscape'); }
   function setOrientation(o, save) {
     page.classList.toggle('is-landscape', o === 'landscape');
     if (save) { try { localStorage.setItem(ORIENT_KEY, o); } catch (e) {} }
-    updateToolbar(); fitZoom();
+    updateToolbar(); fitZoom(); renderTopBar();
   }
 
   /* ── Выделение объекта и его панель (размер / изменить / удалить) ── */
@@ -365,7 +382,7 @@
   }
 
   /* ── Печать ────────────────────────────────────────────────────── */
-  function printA4() {
+  function printA4(batchEl) {
     selectObj(null);
     var hint = root.querySelector('.a4-hint');
     hint.hidden = false; clearTimeout(hint.__t); hint.__t = setTimeout(function () { hint.hidden = true; }, 12000);
@@ -373,12 +390,125 @@
     st.textContent = '@page{size:A4 ' + (landscape() ? 'landscape' : 'portrait') + ';margin:0}';
     document.head.appendChild(st);
     document.body.classList.add('lc-a4-printing');
+    if (batchEl) document.body.classList.add('lc-a4-batch-printing');
     var clean = function () {
-      document.body.classList.remove('lc-a4-printing'); st.remove(); window.removeEventListener('afterprint', clean);
+      document.body.classList.remove('lc-a4-printing', 'lc-a4-batch-printing'); st.remove(); window.removeEventListener('afterprint', clean);
+      if (batchEl && batchEl.parentNode) batchEl.remove();
     };
     window.addEventListener('afterprint', clean);
     window.print();
     setTimeout(function () { if (document.body.classList.contains('lc-a4-printing')) clean(); }, 60000);
+  }
+
+  /* ── Печать списка: текущий лист — шаблон, на каждую строку свой лист ── */
+  var batchDlg = null;
+  function setRoleText(el, value) {
+    /* сохранить оформление: текст кладём в первый текстовый узел, остальные очищаем */
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null), nodes = [], n;
+    while ((n = walker.nextNode())) if (n.nodeValue.replace(/​/g, '').trim()) nodes.push(n);
+    if (!nodes.length) { el.textContent = value; return; }
+    nodes[0].nodeValue = value; for (var i = 1; i < nodes.length; i++) nodes[i].nodeValue = '';
+  }
+  function setLineIn(sheet, role, value) {
+    var p = sheet.querySelector('p[data-role="' + role + '"]'); if (!p) return;
+    if (!value) { p.remove(); return; }
+    var span = p.querySelector('span') || p;
+    span.innerHTML = '<b>' + (role === 'inv' ? 'Инв:' : 'S/N:') + '</b> ' + esc(value);
+  }
+  function setCodeIn(sheet, role, value, problems) {
+    var obj = sheet.querySelector('.a4-obj[data-role="' + role + '"]'); if (!obj) return;
+    if (!value) { obj.remove(); return; }
+    var html = objHtml(obj.getAttribute('data-kind'), value, parseFloat(obj.style.width) || 50, role);
+    if (!html) { problems.push(role === 'barcode' ? 'штрихкод: «' + value + '» — только латиница и цифры' : 'QR'); obj.remove(); return; }
+    var tmp = document.createElement('div'); tmp.innerHTML = html; obj.replaceWith(tmp.firstChild);
+  }
+  function buildSheet(row, problems) {
+    var sheet = document.createElement('div');
+    sheet.className = 'a4-page a4-batch-page' + (landscape() ? ' is-landscape' : '');
+    sheet.innerHTML = page.innerHTML;
+    Array.from(sheet.querySelectorAll('.is-selected')).forEach(function (o) { o.classList.remove('is-selected'); });
+    var t = sheet.querySelector('p[data-role="title"]');
+    if (t) { if (row.title) setRoleText(t, row.title); else t.remove(); }
+    setLineIn(sheet, 'inv', row.inventory);
+    setLineIn(sheet, 'sn', row.serial);
+    setCodeIn(sheet, 'barcode', row.inventory, problems);
+    setCodeIn(sheet, 'qr', row.serial, problems);
+    var codes = sheet.querySelector('p[data-role="codes"]');
+    if (codes) {
+      var objs = Array.from(codes.querySelectorAll('.a4-obj'));
+      if (!objs.length) codes.remove();
+      else { codes.innerHTML = ''; objs.forEach(function (o, i) { if (i) codes.insertAdjacentHTML('beforeend', SPACER); codes.appendChild(o); }); }
+    }
+    return sheet;
+  }
+
+  function openBatch() {
+    if (batchDlg) return;
+    var mode = 'auto'; try { mode = localStorage.getItem('lc-a4-batch-mode') || 'auto'; } catch (e) {}
+    var opt = function (v, t, d) {
+      return '<label class="a4-mode"><input type="radio" name="a4-batch-mode" value="' + v + '"' + (v === mode ? ' checked' : '') + '><span><b>' + t + '</b><small>' + d + '</small></span></label>';
+    };
+    batchDlg = document.createElement('div');
+    batchDlg.className = 'a4-dlg-backdrop';
+    batchDlg.innerHTML =
+      '<section class="a4-dlg" role="dialog" aria-modal="true" aria-labelledby="a4-dlg-title">' +
+        '<div class="a4-dlg-head"><div><h2 id="a4-dlg-title">Печать списка на A4</h2>' +
+        '<p>Шаблон — текущий лист: оформление, логотип и размеры кодов сохраняются, для каждой строки подставляются название, Инв, S/N и коды. Одна строка — один лист.</p></div>' +
+        '<button type="button" class="a4-dlg-x" data-dlg="close" aria-label="Закрыть">×</button></div>' +
+        '<div class="a4-modes">' +
+          opt('auto', 'Автовыбор', 'Каждой строке — что в ней есть') +
+          opt('inventory', 'Инвентарник', 'Инв и штрихкод, без S/N') +
+          opt('serial', 'S/N', 'S/N и QR, без Инв') +
+        '</div>' +
+        '<p class="a4-dlg-example">Название ; Инвентарный номер ; S/N — можно вставить прямо из Excel</p>' +
+        '<textarea class="a4-dlg-input" spellcheck="false" placeholder="Ноутбук Lenovo ThinkPad T14; CH00209875; SN-2026-000184&#10;Монитор Samsung 24; CH00209876; SN-2026-000185"></textarea>' +
+        '<div class="a4-dlg-status" role="status"></div>' +
+        '<div class="a4-dlg-actions"><button type="button" class="a4-btn" data-dlg="close">Отмена</button>' +
+        '<button type="button" class="a4-btn a4-print" data-dlg="go">Печатать все</button></div>' +
+      '</section>';
+    root.appendChild(batchDlg);
+    var ta = batchDlg.querySelector('textarea');
+    try { ta.value = localStorage.getItem('lc-a4-batch-text') || ''; } catch (e) {}
+    batchDlg.addEventListener('click', function (e) {
+      if (e.target === batchDlg) { closeBatch(); return; }
+      var b = e.target.closest('[data-dlg]'); if (!b) return;
+      if (b.getAttribute('data-dlg') === 'close') closeBatch(); else runBatch();
+    });
+    batchDlg.addEventListener('change', function (e) {
+      if (e.target.name === 'a4-batch-mode') { try { localStorage.setItem('lc-a4-batch-mode', e.target.value); } catch (er) {} }
+    });
+    batchDlg.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeBatch(); } });
+    setTimeout(function () { ta.focus(); }, 30);
+  }
+  function closeBatch() { if (batchDlg) { batchDlg.remove(); batchDlg = null; } }
+
+  function runBatch() {
+    var ta = batchDlg.querySelector('textarea'), status = batchDlg.querySelector('.a4-dlg-status');
+    var mode = batchDlg.querySelector('[name="a4-batch-mode"]:checked').value;
+    try { localStorage.setItem('lc-a4-batch-text', ta.value); } catch (e) {}
+    var err = function (t) { status.className = 'a4-dlg-status is-error'; status.textContent = t; };
+    if (!window.__lcParseRows) { err('Не удалось прочитать список. Обновите страницу.'); return; }
+    var parsed = window.__lcParseRows(ta.value, mode);
+    if (parsed.errors.length) { err('Проверьте строки: ' + parsed.errors.join(', ') + '. Найдены пустые или неполные данные.'); return; }
+    if (!parsed.rows.length) { err('Добавьте хотя бы одну строку.'); return; }
+    if (!page.querySelector('[data-role="title"],[data-role="inv"],[data-role="sn"],[data-role="barcode"],[data-role="qr"]')) {
+      err('На листе нет полей для подстановки. Включите «Название», «Инв», «S/N», «Штрихкод» или «QR» в строке «На листе».'); return;
+    }
+    libs().then(function () {
+      var box = document.createElement('div'); box.className = 'a4-batch';
+      var warn = [];
+      parsed.rows.forEach(function (row, i) {
+        var problems = [];
+        box.appendChild(buildSheet(row, problems));
+        if (problems.length) warn.push('строка ' + (i + 1) + ': ' + problems.join(', '));
+      });
+      if (warn.length && !window.confirm('Некоторые коды не получились:\n\n' + warn.slice(0, 12).join('\n') + (warn.length > 12 ? '\n… и ещё ' + (warn.length - 12) : '') + '\n\nПечатать без них?')) return;
+      root.appendChild(box);
+      closeBatch();
+      var imgs = Array.from(box.querySelectorAll('img'));
+      Promise.all(imgs.map(function (im) { return im.complete ? 0 : new Promise(function (r) { im.onload = im.onerror = r; }); }))
+        .then(function () { printA4(box); });
+    }).catch(function (e) { err(e.message); });
   }
 
   /* ── Построение редактора ──────────────────────────────────────── */
@@ -389,6 +519,9 @@
       '<div class="a4-top">' +
         '<button type="button" class="a4-btn a4-back" data-act="close">' + ico('<path d="M15 18l-6-6 6-6"/>') + '<span>К этикеткам</span></button>' +
         '<div class="a4-title"><b>Лист A4</b><span class="a4-saved">Сохранено</span><span class="a4-warn" role="alert" hidden>Штрихкод не обновлён: в Инв только латиница, цифры и знаки</span></div>' +
+        '<button type="button" class="a4-btn a4-icon-btn" data-act="theme" data-testid="a4-button-theme"></button>' +
+        '<span class="a4-badge" data-testid="a4-badge-size">A4 · книжная</span>' +
+        '<button type="button" class="a4-btn" data-act="batch" title="Напечатать список: на каждую строку — свой лист A4 по этому шаблону">' + ico('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>') + '<span>Печать списка</span></button>' +
         '<button type="button" class="a4-btn a4-print" data-act="print">' + ico('<path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/>') + '<span>Печать A4</span></button>' +
       '</div>' +
       '<div class="a4-hint" role="status" hidden>' + ico('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>') +
@@ -481,6 +614,12 @@
       if (b.closest('.a4-objbar') || act === 'smaller' || act === 'bigger') { objAction(act); return; }
       if (act === 'close') close();
       else if (act === 'print') printA4();
+      else if (act === 'batch') openBatch();
+      else if (act === 'theme') {
+        var main = document.querySelector('[data-testid="button-theme"]');
+        if (main) main.click();
+        renderTopBar();
+      }
       else if (act === 'reset') { if (confirm('Собрать лист заново из текущей этикетки? Текущий лист будет заменён.')) libs().then(function () { page.innerHTML = labelBlockHtml(); savedRange = null; scheduleSave(); updateToolbar(); }); }
       else if (act === 'clear') { if (confirm('Очистить лист A4?')) { page.innerHTML = '<p><br></p>'; savedRange = null; scheduleSave(); } }
       else if (act === 'label') libs().then(function () { insertHtml(labelBlockHtml()); }).catch(function (er) { alert(er.message); });
@@ -512,7 +651,7 @@
     document.addEventListener('selectionchange', function () { if (root && !root.hidden) { rememberSelection(); updateToolbar(); } });
     root.querySelector('.a4-scroll').addEventListener('scroll', placeObjBar);
     window.addEventListener('resize', fitZoom);
-    document.addEventListener('keydown', function (e) { if (root && !root.hidden && e.key === 'Escape' && !selectedObj) close(); });
+    document.addEventListener('keydown', function (e) { if (root && !root.hidden && e.key === 'Escape' && !selectedObj && !batchDlg) close(); });
   }
 
   /* Кнопка «Назад» браузера: открытие листа — отдельный шаг истории (адрес не меняется) */
@@ -523,12 +662,13 @@
     }
     if (!root) build();
     root.hidden = false; document.body.classList.add('lc-a4-open');
-    fitZoom(); updateToolbar(); updateSizeBox();
+    fitZoom(); updateToolbar(); updateSizeBox(); renderTopBar();
     libs().catch(function () {}); /* подгружаем заранее */
     setTimeout(function () { page.focus(); }, 50);
   }
   function hide() {
     if (!root) return;
+    closeBatch();
     selectObj(null); root.hidden = true; document.body.classList.remove('lc-a4-open');
   }
   /* «К этикеткам» / Esc — шаг назад по истории, чтобы «Назад» потом не открывал лист снова */

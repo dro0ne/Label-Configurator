@@ -104,3 +104,41 @@ body.lc-a4-open{overflow:hidden}
 .a4-warn{padding:3px 8px;border-radius:6px;background:#fdecec;color:#a61b1b;font-size:.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html[data-theme="dark"] .a4-warn{background:#3a2224;color:#f2b8b8}
 .a4-warn[hidden]{display:none}
+
+/* Шапка листа: тема, формат, печать списка — как на главной */
+.a4-icon-btn{width:40px;padding:0;justify-content:center}
+.a4-badge{display:inline-flex;align-items:center;height:40px;padding:0 12px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-btn);color:var(--a4-on-fg);font:600 .78rem/1 ui-monospace,Consolas,monospace;white-space:nowrap}
+@media (max-width:640px){.a4-badge{display:none}.a4-icon-btn{width:44px;height:44px}}
+
+/* Окно «Печать списка на A4» */
+.a4-dlg-backdrop{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,20,.55)}
+.a4-dlg{width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 22px;border:1px solid var(--a4-border);border-radius:14px;background:var(--a4-bar);color:var(--a4-fg);box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.a4-dlg-head{display:flex;justify-content:space-between;gap:12px}
+.a4-dlg h2{margin:0;font-size:1.15rem}
+.a4-dlg-head p{margin:6px 0 0;color:var(--a4-muted);font-size:.82rem;line-height:1.45}
+.a4-dlg-x{width:36px;height:36px;flex:0 0 auto;border:1px solid var(--a4-border);border-radius:9px;background:var(--a4-btn);color:var(--a4-fg);font-size:1.4rem;line-height:1;cursor:pointer}
+.a4-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 12px}
+.a4-mode{position:relative;display:block;cursor:pointer}
+.a4-mode input{position:absolute;opacity:0;pointer-events:none}
+.a4-mode span{display:block;height:100%;padding:10px 12px;border:1.5px solid var(--a4-border);border-radius:10px;background:var(--a4-btn)}
+.a4-mode b{display:block;font-size:.85rem}
+.a4-mode small{display:block;margin-top:3px;color:var(--a4-muted);font-size:.72rem;line-height:1.35}
+.a4-mode input:checked+span{border-color:var(--a4-accent);background:var(--a4-on);box-shadow:0 0 0 2px var(--a4-on)}
+.a4-mode input:focus-visible+span{outline:2px solid var(--a4-accent);outline-offset:2px}
+.a4-dlg-example{margin:0 0 6px;color:var(--a4-muted);font:.75rem/1.4 ui-monospace,Consolas,monospace}
+.a4-dlg-input{box-sizing:border-box;width:100%;min-height:200px;resize:vertical;padding:10px 12px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-bg);color:var(--a4-fg);font:13px/1.55 ui-monospace,Consolas,monospace}
+.a4-dlg-status{min-height:20px;margin-top:8px;color:var(--a4-muted);font-size:.82rem}
+.a4-dlg-status.is-error{color:#c62828}
+html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
+.a4-dlg-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+@media (max-width:640px){.a4-modes{grid-template-columns:1fr}.a4-dlg{padding:16px}.a4-dlg-actions .a4-btn{width:auto;padding:0 14px}.a4-dlg-actions .a4-btn span{display:inline}}
+
+/* Печать списка: на каждую строку — свой лист */
+.a4-batch{display:none}
+@media print{
+  body.lc-a4-batch-printing #lc-a4 .a4-scroll{display:none!important}
+  body.lc-a4-batch-printing #lc-a4 .a4-batch{display:block!important}
+  body.lc-a4-batch-printing #lc-a4 .a4-batch-page{box-sizing:border-box!important;width:210mm!important;height:297mm!important;min-height:0!important;overflow:hidden!important;box-shadow:none!important;background-image:none!important;break-after:page;page-break-after:always}
+  body.lc-a4-batch-printing #lc-a4 .a4-batch-page.is-landscape{width:297mm!important;height:210mm!important}
+  body.lc-a4-batch-printing #lc-a4 .a4-batch-page:last-child{break-after:auto;page-break-after:auto}
+}

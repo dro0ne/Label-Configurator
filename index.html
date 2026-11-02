@@ -36,8 +36,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
     <script defer src="./lc-extras.js?v=20261102-5"></script>
-    <link rel="stylesheet" href="./a4.css?v=20261102-6">
-    <script defer src="./a4.js?v=20261102-10"></script>
+    <link rel="stylesheet" href="./a4.css?v=20261102-7">
+    <script defer src="./a4.js?v=20261102-11"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1336,6 +1336,7 @@
     return { rows: rows, errors: errors };
   }
 
+  window.__lcParseRows = parseRows; /* тот же разбор списка нужен листу A4 */
   function closeDialog() { if (dialog) { dialog.remove(); dialog = null; } }
   function openDialog() {
     if (dialog) return;
