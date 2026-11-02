@@ -1366,8 +1366,8 @@
     modesEl.classList.add('lc-batch-modes-3');
     modesEl.innerHTML =
       modeHtml('auto', 'Автовыбор макета', 'Для каждой строки свой вариант: полный, с инвентарником или с S/N', ' lc-batch-mode-auto') +
-      modeHtml('inventory', 'Только инвентарник', 'Весь список: название, Инв и штрихкод. S/N не печатается') +
-      modeHtml('serial', 'Только серийник', 'Весь список: название, S/N и QR. Инв не печатается');
+      modeHtml('inventory', 'Инвентарник', 'Весь список: название, Инв и штрихкод. S/N не печатается') +
+      modeHtml('serial', 'S/N', 'Весь список: название, S/N и QR. Инв не печатается');
     updateBatchHelp();
     dialog.querySelector('.lc-batch-close').onclick = closeDialog;
     dialog.querySelector('.lc-batch-cancel').onclick = closeDialog;
