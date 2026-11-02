@@ -31,7 +31,7 @@
     <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-2">
     <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
     <link rel="stylesheet" href="./print-layout.css?v=20261102-4">
-    <link rel="stylesheet" href="./lc-extras.css?v=20261102-3">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261102-4">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
@@ -1304,7 +1304,8 @@
     return problems.join(', ');
   }
 
-  function parseRows(text) {
+  function parseRows(text, mode) {
+    mode = mode || 'auto';
     var rows = [], errors = [], seenData = false;
     text.split(/\r?\n/).forEach(function (raw, index) {
       if (!raw.trim()) return;
@@ -1316,9 +1317,16 @@
       if (cols.length > 3) cols = cols.slice(0, 3); /* лишние столбцы Excel не должны попадать в QR */
       if (cols.length < 2 || !cols[0]) { errors.push(index + 1); return; }
       var row = { title: cols[0], inventory: '', serial: '', mode: '' };
-      if (cols.length >= 3) {
+      if (mode === 'inventory') {
+        /* принудительно: только инвентарник (2-й столбец), S/N игнорируется */
         row.inventory = cols[1];
-        row.serial = cols[2];
+      } else if (mode === 'serial') {
+        /* принудительно: только серийник — 3-й столбец, а если столбцов 2, то 2-й */
+        var snRaw = cols.length >= 3 ? cols[2] : cols[1];
+        row.serial = snRaw ? (snRaw.replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || snRaw) : '';
+      } else if (cols.length >= 3) {
+        row.inventory = cols[1];
+        row.serial = cols[2] ? (cols[2].replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || cols[2]) : '';
       } else if (detectCodeType(cols[1]) === 'serial') row.serial = cols[1].replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || cols[1];
       else row.inventory = cols[1];
       if (!row.inventory && !row.serial) { errors.push(index + 1); return; }
@@ -1347,11 +1355,20 @@
       '<div class="lc-print-note"><strong>В окне печати:</strong> отключите «Колонтитулы», чтобы на этикетках не было даты, localhost и номера страницы.</div>' +
       '<div class="lc-batch-actions"><button class="lc-batch-btn lc-batch-cancel" type="button">Отмена</button><button class="lc-batch-btn lc-batch-btn-primary lc-batch-start" type="button">Печатать все</button></div></div></section>';
     document.body.appendChild(dialog);
-    dialog.querySelector('.lc-batch-modes').innerHTML =
-      '<label class="lc-batch-mode lc-batch-mode-auto"><input type="radio" name="lc-print-mode" value="auto" checked>' +
-      '<span class="lc-batch-mode-content"><strong>Автовыбор макета</strong><small>Для каждой строки будет выбран подходящий вариант: полный, с инвентарником или с S/N</small></span></label>';
-    dialog.querySelector('.lc-batch-example').textContent = 'Название ; Инвентарный номер ; S/N   или   Название ; номер';
-    dialog.querySelector('.lc-batch-status').textContent = 'Можно смешивать строки из 2 и 3 столбцов — тип этикетки определяется автоматически.';
+    var savedMode = 'auto';
+    try { savedMode = localStorage.getItem('lc-batch-mode') || 'auto'; } catch (e) {}
+    if (['auto', 'inventory', 'serial'].indexOf(savedMode) < 0) savedMode = 'auto';
+    var modeHtml = function (value, title, text, extra) {
+      return '<label class="lc-batch-mode' + (extra || '') + '"><input type="radio" name="lc-print-mode" value="' + value + '"' + (value === savedMode ? ' checked' : '') + '>' +
+        '<span class="lc-batch-mode-content"><strong>' + title + '</strong><small>' + text + '</small></span></label>';
+    };
+    var modesEl = dialog.querySelector('.lc-batch-modes');
+    modesEl.classList.add('lc-batch-modes-3');
+    modesEl.innerHTML =
+      modeHtml('auto', 'Автовыбор макета', 'Для каждой строки свой вариант: полный, с инвентарником или с S/N', ' lc-batch-mode-auto') +
+      modeHtml('inventory', 'Только инвентарник', 'Весь список: название, Инв и штрихкод. S/N не печатается') +
+      modeHtml('serial', 'Только серийник', 'Весь список: название, S/N и QR. Инв не печатается');
+    updateBatchHelp();
     dialog.querySelector('.lc-batch-close').onclick = closeDialog;
     dialog.querySelector('.lc-batch-cancel').onclick = closeDialog;
     dialog.addEventListener('click', function (e) { if (e.target === dialog) closeDialog(); });
@@ -1362,10 +1379,22 @@
 
   function updateBatchHelp() {
     var mode = dialog.querySelector('[name="lc-print-mode"]:checked').value;
+    try { localStorage.setItem('lc-batch-mode', mode); } catch (e) {}
     var example = dialog.querySelector('.lc-batch-example'), input = dialog.querySelector('.lc-batch-input'), status = dialog.querySelector('.lc-batch-status');
-    if (mode === 'full') { example.textContent = 'Название ; Инвентарный номер ; Серийный номер'; input.placeholder = 'Ноутбук Lenovo; CH00209875; SN-2026-000184'; status.textContent = 'Вставьте 3 столбца из Excel или строки через точку с запятой.'; }
-    else if (mode === 'inventory') { example.textContent = 'Название оборудования ; Инвентарный номер'; input.placeholder = 'АТОЛ 25Ф\tCH00209875\nСканер Zebra\tCH00209876'; status.textContent = 'Вставьте 2 столбца из Excel: название и инвентарник. Можно также вставить один столбец номеров.'; }
-    else { example.textContent = 'Название оборудования ; S/N'; input.placeholder = 'АТОЛ 25Ф\t105703670249\nСканер Zebra\tSNA123456'; status.textContent = 'Вставьте 2 столбца из Excel: название и S/N. Можно также вставить один столбец номеров.'; }
+    status.className = 'lc-batch-status';
+    if (mode === 'inventory') {
+      example.textContent = 'Название ; Инвентарный номер   (3-й столбец S/N можно оставить — он не печатается)';
+      input.placeholder = 'АТОЛ 25Ф\tCH00209875\nСканер Zebra\tCH00209876\tSN-2026-000185';
+      status.textContent = 'Все этикетки — с инвентарником и штрихкодом. Номер берётся из 2-го столбца.';
+    } else if (mode === 'serial') {
+      example.textContent = 'Название ; S/N   или   Название ; Инв ; S/N';
+      input.placeholder = 'АТОЛ 25Ф\t105703670249\nСканер Zebra\tCH00209876\tSN-2026-000185';
+      status.textContent = 'Все этикетки — с серийником и QR. S/N берётся из 3-го столбца, а если столбцов два — из 2-го.';
+    } else {
+      example.textContent = 'Название ; Инвентарный номер ; S/N   или   Название ; номер';
+      input.placeholder = 'Ноутбук Lenovo ThinkPad T14; CH00209875; SN-2026-000184\nМонитор Samsung 24; CH00209876; SN-2026-000185';
+      status.textContent = 'Можно смешивать строки из 2 и 3 столбцов — тип этикетки определяется автоматически.';
+    }
   }
 
   /* Подгоняет коды, предупреждает о нечитаемых и отправляет листы на печать. */
@@ -1414,7 +1443,7 @@
   async function buildAndPrint() {
     var textarea = dialog.querySelector('textarea'), status = dialog.querySelector('.lc-batch-status'), button = dialog.querySelector('.lc-batch-start');
     var mode = dialog.querySelector('[name="lc-print-mode"]:checked').value;
-    var parsed = parseRows(textarea.value);
+    var parsed = parseRows(textarea.value, mode);
     if (parsed.errors.length) { status.className = 'lc-batch-status is-error'; status.textContent = 'Проверьте строки: ' + parsed.errors.join(', ') + '. Найдены пустые или неполные данные.'; return; }
     if (!parsed.rows.length) { status.className = 'lc-batch-status is-error'; status.textContent = 'Добавьте хотя бы одну строку с данными.'; return; }
     var title = field('title'), inventory = field('inventory'), serial = field('serial');

@@ -68,3 +68,6 @@ label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
 
 /* Светлая тема: линия под шапкой — светлая (цвет рамки шёл из тёмной темы) */
 html:not([data-theme="dark"]) [data-testid="page-configurator"]>header{border-bottom-color:#e2e8f0!important}
+
+/* «Печать списка»: автовыбор на всю ширину, ниже «Только инвентарник» и «Только серийник» */
+@media (min-width:621px){.lc-batch-modes.lc-batch-modes-3{grid-template-columns:1fr 1fr!important}}
