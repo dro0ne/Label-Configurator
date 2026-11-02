@@ -39,12 +39,19 @@ body.lc-a4-open{overflow:hidden}
 .a4-size{height:34px;padding:0 6px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font:500 .85rem inherit}
 .a4-logo-btn{background:#fff;border-color:var(--a4-border);padding:0 7px}
 .a4-logo-btn:hover{background:#fff;border-color:var(--a4-accent)}
+.a4-logo-btn{opacity:.55}
+.a4-logo-btn.is-on{opacity:1;border-color:var(--a4-accent);box-shadow:0 0 0 2px var(--a4-on)}
+.a4-toggle:not(.a4-logo-btn){border-color:var(--a4-border)}
+.a4-toggle:not(.a4-logo-btn):not(.is-on){color:var(--a4-muted)}
+.a4-toggle.is-on:not(.a4-logo-btn){border-color:var(--a4-on-fg)}
 .a4-logo-btn img{display:block;height:16px;width:auto;max-width:78px}
 
 .a4-scroll{position:relative;flex:1;overflow:auto;padding:24px 16px 60px}
-.a4-zoom{width:210mm;margin:0 auto}
+.a4-zoom{width:fit-content;margin:0 auto}
 .a4-page{box-sizing:border-box;width:210mm;min-height:297mm;padding:18mm 18mm 20mm;background:#fff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,.08),0 12px 40px rgba(0,0,0,.12);outline:0;font:14pt/1.35 Arial,Helvetica,sans-serif;overflow-wrap:anywhere;
   background-image:linear-gradient(to bottom,transparent calc(297mm - 1px),rgba(1,105,111,.35) calc(297mm - 1px),rgba(1,105,111,.35) 297mm,transparent 297mm);background-size:100% 297mm}
+.a4-page.is-landscape{width:297mm;min-height:210mm;padding:15mm 18mm;
+  background-image:linear-gradient(to bottom,transparent calc(210mm - 1px),rgba(1,105,111,.35) calc(210mm - 1px),rgba(1,105,111,.35) 210mm,transparent 210mm);background-size:100% 210mm}
 .a4-page p,.a4-page div{margin:0 0 .35em}
 .a4-page ul,.a4-page ol{margin:0 0 .35em;padding-left:1.4em}
 
@@ -82,6 +89,7 @@ body.lc-a4-open{overflow:hidden}
   body.lc-a4-printing #lc-a4 .a4-scroll{overflow:visible!important;padding:0!important}
   body.lc-a4-printing #lc-a4 .a4-zoom{zoom:1!important;width:auto!important;margin:0!important}
   body.lc-a4-printing #lc-a4 .a4-page{box-shadow:none!important;background-image:none!important;width:210mm!important;min-height:0!important}
+  body.lc-a4-printing #lc-a4 .a4-page.is-landscape{width:297mm!important}
   body.lc-a4-printing #lc-a4 .a4-obj{outline:0!important}
   body.lc-a4-printing #lc-a4,body.lc-a4-printing #lc-a4 *{visibility:visible!important}
 }
