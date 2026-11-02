@@ -1,73 +1,34 @@
 /* Геометрия печати — общая для светлой и тёмной темы. */
-@media print{html,body,#root,[data-testid="page-configurator"]{background:#fff!important}[data-testid="preview-label-surface"]{box-shadow:none!important}}
 @media print{
-  [data-testid="preview-label-surface"],#print-root,#print-batch-root .lc-print-label{background:#fff!important}
+  html,body,#root,[data-testid="page-configurator"]{background:#fff!important}
+  [data-testid="preview-label-surface"]{box-shadow:none!important;filter:none!important}
+  [data-testid="preview-label-surface"],#print-root{background:#fff!important}
   [data-testid="preview-label-surface"] [data-testid="preview-barcode"]{mix-blend-mode:normal!important}
-  #print-batch-root .lc-print-label [data-testid="preview-title"],
-  #print-batch-root .lc-print-label [data-testid="preview-inventory"],
-  #print-batch-root .lc-print-label [data-testid="preview-serial"]{align-self:flex-start!important;text-align:left!important}
-  #print-batch-root .lc-print-label [data-testid="preview-code-stack"]{width:100%!important;max-width:100%!important;flex:1 1 auto!important;justify-content:center!important;align-items:center!important;gap:8%!important;transform:none!important}
-  #print-batch-root .lc-print-label [data-testid="preview-barcode"]{transform:none!important;flex:1 1 60%!important;max-width:68%!important}
-  #print-batch-root .lc-print-label [data-testid="preview-barcode"] svg{width:100%!important;height:auto!important;max-height:100%!important}
-  #print-batch-root .lc-print-label [data-testid="preview-qr"]{transform:none!important;flex:0 1 34%!important;max-width:34%!important}
-  #print-batch-root .lc-print-label [data-testid="preview-qr"] svg,
-  #print-batch-root .lc-print-label [data-testid="preview-qr"] canvas{width:100%!important;height:auto!important;aspect-ratio:1!important}
-  #print-batch-root .lc-mode-inventory [data-testid="preview-barcode"]{flex-basis:88%!important;max-width:88%!important}
-  #print-batch-root .lc-mode-serial [data-testid="preview-qr"]{flex-basis:auto!important;max-width:min(72%,100%)!important;width:auto!important;height:min(72%,100%)!important}
 }
-@media print{
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-title"]{font-size:9px!important;font-weight:700!important;line-height:1.12!important;max-height:21px!important;margin:0!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-inventory"],
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-serial"]{font-size:8px!important;line-height:1.15!important;margin:0!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-code-stack"]{box-sizing:border-box!important;flex:1 1 auto!important;min-height:0!important;max-height:none!important;margin:2px 0!important;padding:2px 6px!important;gap:12px!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-store"]{box-sizing:border-box!important;flex:0 0 24px!important;min-height:24px!important;max-height:24px!important;margin:0!important;padding:2px 8px!important;font-size:10px!important;line-height:20px!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label #lc-store-logo,
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-store-logo{display:block!important;width:auto!important;height:auto!important;max-width:64%!important;max-height:17px!important;margin:auto!important;object-fit:contain!important;filter:none!important}
 
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-full [data-testid="preview-barcode"]{flex:1 1 112px!important;width:112px!important;max-width:112px!important;max-height:66px!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-full [data-testid="preview-qr"]{flex:0 0 58px!important;width:58px!important;height:58px!important;max-width:58px!important;max-height:58px!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-full [data-testid="preview-qr"] svg,
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-full [data-testid="preview-qr"] canvas{width:58px!important;height:58px!important;max-width:58px!important;max-height:58px!important}
+/* ── Лист «Печати списка» ───────────────────────────────────────────
+   Правила действуют и на экране: перед печатью листы измеряются вне экрана
+   (класс .lc-measure), а JS подгоняет QR и штрихкод под точки принтера 203 dpi. */
+#print-batch-root.lc-measure{display:block!important;position:absolute!important;left:-10000px!important;top:0!important;visibility:hidden!important;pointer-events:none!important}
 
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-inventory [data-testid="preview-code-stack"]{padding:5px 12px!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-inventory [data-testid="preview-barcode"]{flex:0 1 198px!important;width:198px!important;max-width:94%!important;max-height:82px!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-inventory [data-testid="preview-barcode"] svg{width:100%!important;max-width:100%!important;height:auto!important;max-height:82px!important}
+#print-batch-root .lc-print-label.lc-print-sheet{box-sizing:border-box!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:calc(1mm * var(--k,1))!important;width:var(--sheet-w,58mm)!important;height:var(--sheet-h,40mm)!important;margin:0!important;padding:var(--sheet-pad,3mm)!important;overflow:hidden!important;background:#fff!important;color:#000!important;font-family:Arial,Helvetica,sans-serif!important;box-shadow:none!important;border:0!important;border-radius:0!important;transform:none!important}
+#print-batch-root .lc-print-sheet-header{min-width:0!important;overflow:hidden!important;text-align:left!important}
+#print-batch-root .lc-print-sheet-title{display:-webkit-box!important;overflow:hidden!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;font-size:calc(3.1mm * var(--k,1))!important;font-weight:700!important;line-height:1.08!important;overflow-wrap:anywhere!important}
+#print-batch-root .lc-print-sheet-meta{margin-top:calc(.5mm * var(--k,1))!important;font-size:calc(2.6mm * var(--k,1))!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#print-batch-root .lc-print-sheet-meta b{font-weight:700!important}
+#print-batch-root .lc-print-sheet-meta span{font-family:Consolas,"Courier New",monospace!important}
 
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-serial [data-testid="preview-code-stack"]{padding:3px 12px!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-serial [data-testid="preview-qr"]{flex:0 0 78px!important;width:78px!important;height:78px!important;max-width:78px!important;max-height:78px!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-serial [data-testid="preview-qr"] svg,
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-serial [data-testid="preview-qr"] canvas{width:78px!important;height:78px!important;max-width:78px!important;max-height:78px!important}
-}
-@media print{
-  [data-testid="preview-label-surface"]{filter:none!important}
-  #print-batch-root .lc-print-label.lc-print-sheet{box-sizing:border-box!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) calc(7mm * var(--k,1))!important;gap:calc(1mm * var(--k,1))!important;width:var(--sheet-w,58mm)!important;height:var(--sheet-h,40mm)!important;margin:0!important;padding:var(--sheet-pad,3mm)!important;overflow:hidden!important;background:#fff!important;color:#000!important;font-family:Arial,Helvetica,sans-serif!important}
-  #print-batch-root .lc-print-sheet-header{min-width:0!important;overflow:hidden!important;text-align:left!important}
-  #print-batch-root .lc-print-sheet-title{display:-webkit-box!important;max-height:calc(6.6mm * var(--k,1))!important;overflow:hidden!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;font-size:calc(3.1mm * var(--k,1))!important;font-weight:700!important;line-height:1.06!important;overflow-wrap:anywhere!important}
-  #print-batch-root .lc-print-sheet-meta{margin-top:calc(.55mm * var(--k,1))!important;font-size:calc(2.65mm * var(--k,1))!important;font-weight:400!important;line-height:1.05!important;white-space:nowrap!important}
-  #print-batch-root .lc-print-sheet-meta b{font-family:Arial,Helvetica,sans-serif!important;font-weight:700!important}
-  #print-batch-root .lc-print-sheet-meta span{font-family:Consolas,"Courier New",monospace!important;letter-spacing:calc(.08mm * var(--k,1))!important}
-  #print-batch-root .lc-print-sheet-codes{box-sizing:border-box!important;display:flex!important;min-width:0!important;min-height:0!important;align-items:center!important;justify-content:center!important;gap:calc(3mm * var(--k,1))!important;overflow:hidden!important}
-  #print-batch-root .lc-print-sheet-barcode{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;min-width:0!important;max-height:100%!important;overflow:hidden!important;transform:none!important}
-  #print-batch-root .lc-print-sheet-barcode svg{display:block!important;width:100%!important;height:auto!important;max-height:calc(100% - 3mm * var(--k,1))!important}
-  #print-batch-root .lc-print-sheet-code-value{display:block!important;flex:0 0 auto!important;margin-top:calc(.35mm * var(--k,1))!important;font:calc(2.25mm * var(--k,1))/1 Consolas,"Courier New",monospace!important;white-space:nowrap!important}
-  #print-batch-root .lc-print-sheet-qr{display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;min-height:0!important;overflow:hidden!important;transform:none!important}
-  #print-batch-root .lc-print-sheet-qr svg,#print-batch-root .lc-print-sheet-qr canvas{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;aspect-ratio:1!important}
-  #print-batch-root .lc-mode-full .lc-print-sheet-barcode{flex:1 1 calc(29mm * var(--k,1))!important;max-width:calc(29mm * var(--k,1))!important}
-  #print-batch-root .lc-mode-full .lc-print-sheet-qr{flex:0 0 calc(16mm * var(--k,1))!important;width:calc(16mm * var(--k,1))!important;height:calc(16mm * var(--k,1))!important}
-  #print-batch-root .lc-mode-inventory .lc-print-sheet-barcode{flex:0 1 calc(45mm * var(--k,1))!important;width:calc(45mm * var(--k,1))!important;max-width:calc(45mm * var(--k,1))!important}
-  #print-batch-root .lc-mode-serial .lc-print-sheet-qr{flex:0 0 calc(22mm * var(--k,1))!important;width:calc(22mm * var(--k,1))!important;height:calc(22mm * var(--k,1))!important}
-  #print-batch-root .lc-print-sheet-footer{box-sizing:border-box!important;display:flex!important;min-width:0!important;min-height:0!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;font-size:calc(3mm * var(--k,1))!important;font-weight:700!important;line-height:1!important;text-align:center!important}
-  #print-batch-root .lc-print-sheet-logo{display:block!important;width:auto!important;height:auto!important;max-width:calc(38mm * var(--k,1))!important;max-height:calc(6mm * var(--k,1))!important;margin:auto!important;object-fit:contain!important;filter:grayscale(1) brightness(0) contrast(2)!important}
-}
-@media print{
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label{position:relative!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-store"]{position:absolute!important;z-index:5!important;left:5px!important;right:5px!important;bottom:3px!important;width:auto!important;height:21px!important;min-height:21px!important;max-height:21px!important;padding:1px 6px!important;background:#fff!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label .lc-print-store-logo{max-width:62%!important;max-height:19px!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-code-stack"]{position:absolute!important;left:5px!important;right:5px!important;width:auto!important;margin:0!important;padding:2px 7px!important;overflow:hidden!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-full [data-testid="preview-code-stack"]{top:52px!important;bottom:26px!important;height:auto!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-inventory [data-testid="preview-code-stack"]{top:38px!important;bottom:26px!important;height:auto!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-mode-serial [data-testid="preview-code-stack"]{top:38px!important;bottom:26px!important;height:auto!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-barcode"]{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;overflow:visible!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-label [data-testid="preview-barcode"] svg text{display:none!important}
-  html[data-lc-label-size="58x40"] #print-batch-root .lc-print-barcode-value{display:block!important;flex:0 0 auto!important;margin-top:1px!important;color:#000!important;font:7px/1.05 ui-monospace,SFMono-Regular,Consolas,monospace!important;text-align:center!important;white-space:nowrap!important}
-}
+#print-batch-root .lc-print-sheet-codes{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:calc(2.5mm * var(--k,1))!important;min-width:0!important;min-height:0!important;height:100%!important;overflow:hidden!important}
+#print-batch-root .lc-portrait .lc-print-sheet-codes{flex-direction:column!important}
+
+#print-batch-root .lc-print-sheet-barcode{box-sizing:border-box!important;display:flex!important;flex:0 0 auto!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;max-width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+#print-batch-root .lc-portrait .lc-print-sheet-barcode{height:auto!important;flex:1 1 0!important;max-height:calc(24mm * var(--k,1))!important}
+#print-batch-root .lc-print-sheet-barcode svg{display:block!important;flex:1 1 0!important;min-height:calc(5mm * var(--k,1))!important;max-height:calc(14mm * var(--k,1))!important;height:auto!important;max-width:none!important}
+#print-batch-root .lc-print-sheet-code-value{display:block!important;flex:0 0 auto!important;margin-top:calc(.4mm * var(--k,1))!important;font:calc(2.2mm * var(--k,1))/1 Consolas,"Courier New",monospace!important;white-space:nowrap!important}
+
+#print-batch-root .lc-print-sheet-qr{flex:0 0 auto!important;display:block!important;overflow:visible!important}
+#print-batch-root .lc-print-sheet-qr>svg,#print-batch-root .lc-print-sheet-qr>img{display:block!important;width:100%!important;height:100%!important}
+
+#print-batch-root .lc-print-sheet-footer{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;height:calc(6mm * var(--k,1) * var(--logo-scale,1))!important;max-height:calc(12mm * var(--k,1))!important;overflow:hidden!important;font-size:calc(3mm * var(--k,1))!important;font-weight:700!important;line-height:1!important;text-align:center!important}
+#print-batch-root .lc-print-sheet-footer.is-empty{display:none!important}
+#print-batch-root .lc-print-sheet-logo{display:block!important;width:auto!important;height:auto!important;max-width:calc(38mm * var(--k,1))!important;max-height:100%!important;object-fit:contain!important}

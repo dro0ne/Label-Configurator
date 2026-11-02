@@ -16,6 +16,7 @@
     <script type="module" crossorigin src="./assets/index-DQzgibq4.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-BDEpssnV.css">
     <link rel="stylesheet" href="./modern-design.css?v=20260803-4">
+    <link rel="stylesheet" href="./layout.css?v=20261102-1">
     <script>
       /* Тема: сохранённый выбор, иначе — как в системе. Выполняется до отрисовки, чтобы не мигало. */
       (function () {
@@ -27,14 +28,14 @@
         window.__lcThemeMedia = saved ? (dark ? 'all' : 'not all') : '(prefers-color-scheme: dark)';
       })();
     </script>
-    <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-1">
+    <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-2">
     <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
-    <link rel="stylesheet" href="./print-layout.css?v=20261102-1">
-    <link rel="stylesheet" href="./lc-extras.css?v=20261102-2">
+    <link rel="stylesheet" href="./print-layout.css?v=20261102-4">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261102-3">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
-    <script defer src="./lc-extras.js?v=20261102-2"></script>
+    <script defer src="./lc-extras.js?v=20261102-3"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1116,7 +1117,7 @@
 
   function detectCodeType(value) {
     var code = String(value || '').trim();
-    return (/^(?:s\s*\/?\s*n|serial|ser)(?=[\s:.№#_-]|\d)/i.test(code) || /^(?:сер|с\s*\/\s*н|сн)(?=[\s:.№#_-])/i.test(code)) ? 'serial' : 'inventory';
+    return (/^(?:s\s*\/?\s*n|serial|ser)(?=[\s:.№#_-]|\d)/i.test(code) || /^(?:сер(?:ийный)?|с\s*\/\s*н|сн)(?=[\s:.№#_-])/i.test(code)) ? 'serial' : 'inventory';
   }
 
   function cleanBatchCell(value) {
@@ -1155,74 +1156,168 @@
     }));
   }
 
-  /* Физический размер листа = выбранный размер этикетки (а не всегда 58×40). */
+  /* ── Лист пакетной печати ──────────────────────────────────────────
+     Размер листа = выбранный размер этикетки. Коды подгоняются под целое число
+     точек принтера (203 dpi), чтобы штрихкод и QR гарантированно читались. */
+  var DOT_MM = 25.4 / 203;
+  var PX_MM = 25.4 / 96;
+
   function applySheetSize(sheet, source) {
-    var PX_TO_MM = 25.4 / 96;
     var w = 58, h = 40;
     if (source) {
       var sw = parseFloat(source.style.width), sh = parseFloat(source.style.height);
-      if (sw > 0 && sh > 0) { w = sw * PX_TO_MM; h = sh * PX_TO_MM; }
+      if (sw > 0 && sh > 0) { w = sw * PX_MM; h = sh * PX_MM; }
     }
     var portrait = h > w * 1.2;
     var k = portrait ? Math.min(w / 50, h / 62) : Math.min(w / 58, h / 40);
-    sheet.classList.toggle('lc-portrait', portrait);
     var safeText = document.querySelector('[data-testid="text-safe-margin"]');
     var pad = safeText ? parseFloat(String(safeText.textContent).replace(',', '.')) : NaN;
     if (!(pad >= 0 && pad <= 10)) pad = 3;
+    pad = Math.min(pad, Math.min(w, h) * 0.1); /* на 32×25 отступ 3.5 мм съедал половину места */
+    sheet.classList.toggle('lc-portrait', portrait);
     sheet.style.setProperty('--sheet-w', w.toFixed(2) + 'mm');
     sheet.style.setProperty('--sheet-h', h.toFixed(2) + 'mm');
-    sheet.style.setProperty('--sheet-pad', pad + 'mm');
+    sheet.style.setProperty('--sheet-pad', pad.toFixed(2) + 'mm');
     sheet.style.setProperty('--k', k.toFixed(3));
+    sheet.__k = k; sheet.__size = Math.round(w) + '×' + Math.round(h);
   }
 
-  function createPrintSheet(source, row, logo) {
+  function stripTestIds(node) {
+    if (node.removeAttribute) node.removeAttribute('data-testid');
+    Array.from(node.querySelectorAll('[data-testid]')).forEach(function (n) { n.removeAttribute('data-testid'); });
+    return node;
+  }
+
+  function createPrintSheet(source, row, logo, single) {
+    var has = function (id) { return !!source.querySelector('[data-testid="preview-' + id + '"]'); };
+    var showBarcode = has('barcode') && !!row.inventory;
+    var showQr = has('qr') && (!!row.serial || (single && !!row.inventory));
+    var mode = showBarcode && showQr ? 'full' : (showBarcode ? 'inventory' : (showQr ? 'serial' : 'text'));
     var sheet = document.createElement('section');
-    sheet.className = 'lc-print-label lc-print-sheet lc-mode-' + row.mode;
+    sheet.className = 'lc-print-label lc-print-sheet lc-mode-' + mode;
     applySheetSize(sheet, source);
+    ['--print-offset-x', '--print-offset-y'].forEach(function (v) {
+      var val = source.style.getPropertyValue(v); if (val) sheet.style.setProperty(v, val);
+    });
 
     var header = document.createElement('div'); header.className = 'lc-print-sheet-header';
-    var titleLine = document.createElement('div'); titleLine.className = 'lc-print-sheet-title'; titleLine.textContent = row.title;
-    header.appendChild(titleLine);
-    if (row.inventory) { var inv = document.createElement('div'); inv.className = 'lc-print-sheet-meta'; inv.innerHTML = '<b>Инв:</b> <span></span>'; inv.querySelector('span').textContent = row.inventory; header.appendChild(inv); }
-    if (row.serial) { var sn = document.createElement('div'); sn.className = 'lc-print-sheet-meta'; sn.innerHTML = '<b>S/N:</b> <span></span>'; sn.querySelector('span').textContent = row.serial; header.appendChild(sn); }
+    if (has('title') && row.title) { var titleLine = document.createElement('div'); titleLine.className = 'lc-print-sheet-title'; titleLine.textContent = row.title; header.appendChild(titleLine); }
+    if (has('inventory') && row.inventory) { var inv = document.createElement('div'); inv.className = 'lc-print-sheet-meta'; inv.innerHTML = '<b>Инв:</b> <span></span>'; inv.querySelector('span').textContent = row.inventory; header.appendChild(inv); }
+    if (has('serial') && row.serial) { var sn = document.createElement('div'); sn.className = 'lc-print-sheet-meta'; sn.innerHTML = '<b>S/N:</b> <span></span>'; sn.querySelector('span').textContent = row.serial; header.appendChild(sn); }
 
     var codes = document.createElement('div'); codes.className = 'lc-print-sheet-codes';
-    if (row.inventory) {
-      var barcodeSource = source.querySelector('[data-testid="preview-barcode"]');
+    if (showBarcode) {
+      var barcodeSource = source.querySelector('[data-testid="preview-barcode"] svg');
       if (barcodeSource) {
-        var barcode = barcodeSource.cloneNode(true); barcode.className = 'lc-print-sheet-barcode'; barcode.removeAttribute('style'); var barcodeSvg = barcode.querySelector('svg'); if (barcodeSvg) barcodeSvg.setAttribute('preserveAspectRatio', 'none');
-        var oldTexts = barcode.querySelectorAll('svg text'); Array.from(oldTexts).forEach(function (node) { node.remove(); });
-        var value = document.createElement('span'); value.className = 'lc-print-sheet-code-value'; value.textContent = row.inventory; barcode.appendChild(value); codes.appendChild(barcode);
+        var barcode = document.createElement('div'); barcode.className = 'lc-print-sheet-barcode';
+        var svg = stripTestIds(barcodeSource.cloneNode(true));
+        Array.from(svg.querySelectorAll('text')).forEach(function (n) { n.remove(); });
+        svg.removeAttribute('style'); svg.removeAttribute('width'); svg.removeAttribute('height');
+        svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('shape-rendering', 'crispEdges');
+        barcode.appendChild(svg);
+        var value = document.createElement('span'); value.className = 'lc-print-sheet-code-value'; value.textContent = row.inventory; barcode.appendChild(value);
+        codes.appendChild(barcode);
       }
     }
-    if (row.serial) {
-      var qrSource = source.querySelector('[data-testid="preview-qr"]');
-      if (qrSource) { var qr = qrSource.cloneNode(true); qr.className = 'lc-print-sheet-qr'; qr.removeAttribute('style'); codes.appendChild(qr); }
+    if (showQr) {
+      var qrSource = source.querySelector('[data-testid="preview-qr"] svg, [data-testid="preview-qr"] canvas');
+      if (qrSource) {
+        var qr = document.createElement('div'); qr.className = 'lc-print-sheet-qr';
+        var q;
+        if (qrSource.tagName.toLowerCase() === 'canvas') { q = document.createElement('img'); q.src = qrSource.toDataURL(); }
+        else { q = stripTestIds(qrSource.cloneNode(true)); q.removeAttribute('style'); q.removeAttribute('width'); q.removeAttribute('height'); q.setAttribute('shape-rendering', 'crispEdges'); }
+        qr.appendChild(q); codes.appendChild(qr);
+      }
     }
 
     var footer = document.createElement('div'); footer.className = 'lc-print-sheet-footer';
-    if (logo && logo.src) {
-      var logoImage = logo.node ? logo.node.cloneNode(true) : document.createElement('img');
-      logoImage.removeAttribute('id'); logoImage.removeAttribute('style'); logoImage.className = 'lc-print-sheet-logo'; logoImage.src = logo.src; logoImage.alt = logo.alt || ''; logoImage.style.setProperty('filter', logo.alt === 'Перекрёсток' ? 'url(#lc-threshold-dark)' : 'url(#lc-threshold)', 'important'); footer.appendChild(logoImage);
+    if (!has('store')) {
+      footer.classList.add('is-empty');
+    } else if (logo && logo.src) {
+      var logoImage = document.createElement('img');
+      logoImage.className = 'lc-print-sheet-logo'; logoImage.src = logo.src; logoImage.alt = logo.alt || '';
+      logoImage.style.setProperty('filter', logo.alt === 'Перекрёсток' ? 'url(#lc-threshold-dark)' : 'url(#lc-threshold)', 'important');
+      var logoScale = window.__lcLogoScale || 1;
+      if (logoScale !== 1) footer.style.setProperty('--logo-scale', String(logoScale));
+      footer.appendChild(logoImage);
     } else {
       var storeInput = field('store'); footer.textContent = storeInput ? storeInput.value : '';
+      if (!footer.textContent) footer.classList.add('is-empty');
     }
     sheet.appendChild(header); sheet.appendChild(codes); sheet.appendChild(footer);
     return sheet;
   }
 
+  /* Подгоняет коды под реальное место (лист должен быть в DOM и видим).
+     Возвращает описание проблемы или ''. */
+  function fitSheetCodes(sheet) {
+    var k = sheet.__k || 1, problems = [];
+    var codes = sheet.querySelector('.lc-print-sheet-codes');
+    var barcode = sheet.querySelector('.lc-print-sheet-barcode');
+    var qr = sheet.querySelector('.lc-print-sheet-qr');
+    var portrait = sheet.classList.contains('lc-portrait');
+    var r = codes.getBoundingClientRect();
+    var rowW = r.width * PX_MM, rowH = r.height * PX_MM, gap = 2.5 * k;
+    var qrMm = 0;
+
+    if (qr) {
+      var q = qr.firstElementChild, modules = 21;
+      var vb = q && q.getAttribute && q.getAttribute('viewBox');
+      if (vb) modules = parseFloat(vb.split(/[\s,]+/)[2]) || 21;
+      var maxQ = Math.min(rowH, (barcode ? 18 : 26) * k);
+      if (barcode && !portrait) maxQ = Math.min(maxQ, rowW * 0.42);
+      if (barcode && portrait) maxQ = Math.min(maxQ, rowH * 0.55);
+      var dpm = Math.floor(maxQ / (modules * DOT_MM));
+      if (dpm < 2) problems.push('QR слишком мелкий');
+      dpm = Math.max(dpm, 1);
+      qrMm = dpm * modules * DOT_MM;
+      qr.style.width = qrMm.toFixed(3) + 'mm'; qr.style.height = qrMm.toFixed(3) + 'mm';
+    }
+
+    if (barcode) {
+      var svg = barcode.querySelector('svg');
+      var bars = Array.from(svg.querySelectorAll('g rect'));
+      if (!bars.length) bars = Array.from(svg.querySelectorAll('rect')).slice(1);
+      var unit = Infinity, minX = Infinity, maxX = -Infinity, barH = 0;
+      bars.forEach(function (b) {
+        var x = parseFloat(b.getAttribute('x')) || 0, bw = parseFloat(b.getAttribute('width')) || 0, bh = parseFloat(b.getAttribute('height')) || 0;
+        var g = b.parentNode && b.parentNode.getAttribute && b.parentNode.getAttribute('transform');
+        var m = g && /translate\(\s*([-\d.]+)/.exec(g); if (m) x += parseFloat(m[1]);
+        if (bw > 0) unit = Math.min(unit, bw);
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x + bw); barH = Math.max(barH, bh);
+      });
+      if (isFinite(unit) && maxX > minX) {
+        var modulesB = Math.round((maxX - minX) / unit);
+        var avail = (portrait || !qr) ? rowW : rowW - qrMm - gap;
+        /* тихая зона ≈ 6 модулей с каждой стороны (поля этикетки тоже белые) */
+        var d = Math.min(4, Math.floor(avail / ((modulesB + 12) * DOT_MM)));
+        if (d < 2) { d = Math.max(1, Math.floor(avail / (modulesB * DOT_MM))); problems.push('штрихкод слишком длинный'); }
+        svg.setAttribute('viewBox', minX + ' 0 ' + (maxX - minX) + ' ' + (barH || 1));
+        var bwMm = Math.min(modulesB * d * DOT_MM, avail);
+        svg.style.width = bwMm.toFixed(3) + 'mm';
+        barcode.style.width = bwMm.toFixed(3) + 'mm';
+        if (modulesB * d * DOT_MM > avail + 0.01) problems.push('штрихкод не помещается');
+      }
+    }
+    return problems.join(', ');
+  }
+
   function parseRows(text) {
-    var rows = [], errors = [];
+    var rows = [], errors = [], seenData = false;
     text.split(/\r?\n/).forEach(function (raw, index) {
       if (!raw.trim()) return;
       var separator = raw.indexOf('\t') >= 0 ? '\t' : (raw.indexOf(';') >= 0 ? ';' : '|');
       var cols = raw.split(separator).map(cleanBatchCell);
+      /* Строка-заголовок из Excel («Название | Инв. номер | S/N») — пропускаем */
+      if (!seenData && /^(назв|наимен|оборуд|name|title)/i.test(cols[0] || '') && /^(инв|inv|номер|№|s\s*\/?\s*n|сер|с\/н|serial|$)/i.test(cols[1] || '')) return;
+      seenData = true;
+      if (cols.length > 3) cols = cols.slice(0, 3); /* лишние столбцы Excel не должны попадать в QR */
       if (cols.length < 2 || !cols[0]) { errors.push(index + 1); return; }
       var row = { title: cols[0], inventory: '', serial: '', mode: '' };
       if (cols.length >= 3) {
         row.inventory = cols[1];
-        row.serial = cols.slice(2).join(separator).trim();
-      } else if (detectCodeType(cols[1]) === 'serial') row.serial = cols[1];
+        row.serial = cols[2];
+      } else if (detectCodeType(cols[1]) === 'serial') row.serial = cols[1].replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || cols[1];
       else row.inventory = cols[1];
       if (!row.inventory && !row.serial) { errors.push(index + 1); return; }
       row.mode = row.inventory && row.serial ? 'full' : (row.inventory ? 'inventory' : 'serial');
@@ -1271,6 +1366,49 @@
     else { example.textContent = 'Название оборудования ; S/N'; input.placeholder = 'АТОЛ 25Ф\t105703670249\nСканер Zebra\tSNA123456'; status.textContent = 'Вставьте 2 столбца из Excel: название и S/N. Можно также вставить один столбец номеров.'; }
   }
 
+  /* Подгоняет коды, предупреждает о нечитаемых и отправляет листы на печать. */
+  async function fitAndPrint(batch, rowWord, onCancel, onBefore) {
+    batch.classList.add('lc-measure'); await nextPaint();
+    var warn = [];
+    Array.from(batch.querySelectorAll('.lc-print-sheet')).forEach(function (sheet, idx) {
+      var problem = fitSheetCodes(sheet);
+      if (problem) warn.push((rowWord ? rowWord + (idx + 1) + ': ' : '') + problem);
+    });
+    batch.classList.remove('lc-measure');
+    if (warn.length) {
+      var first = batch.querySelector('.lc-print-sheet');
+      var msg = 'На этикетке ' + (first && first.__size || '') + ' коды могут не считаться сканером:\n\n' + warn.slice(0, 12).join('\n') + (warn.length > 12 ? '\n… и ещё ' + (warn.length - 12) : '') +
+        '\n\nСовет: выберите этикетку крупнее или отключите один из кодов (Штрих / QR).\n\nВсё равно печатать?';
+      if (!window.confirm(msg)) { onCancel('Печать отменена: коды могут не считаться (' + warn.length + ').'); return false; }
+    }
+    if (onBefore) onBefore();
+    document.body.classList.add('lc-batch-printing');
+    var clean = function () { document.body.classList.remove('lc-batch-printing'); if (batch.parentNode) batch.remove(); window.removeEventListener('afterprint', clean); };
+    window.addEventListener('afterprint', clean); window.print();
+    setTimeout(function () { if (!document.body.classList.contains('lc-batch-printing')) return; clean(); }, 30000);
+    return true;
+  }
+
+  /* Кнопка «Печать»: та же надёжная раскладка, что и у списка. */
+  async function printCurrent() {
+    var source = document.getElementById('print-root');
+    if (!source) { window.print(); return; }
+    var val = function (n) { var f = field(n); return f ? f.value.trim() : ''; };
+    var row = { title: val('title'), inventory: val('inventory'), serial: val('serial') };
+    var old = document.getElementById('print-batch-root'); if (old) old.remove();
+    var batch = document.createElement('div'); batch.id = 'print-batch-root';
+    document.body.appendChild(batch);
+    batch.appendChild(createPrintSheet(source, row, captureBatchLogo(source), true));
+    await waitForBatchImages(batch);
+    await fitAndPrint(batch, '', function () { batch.remove(); });
+  }
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest && event.target.closest('[data-testid="button-print"]');
+    if (!btn) return;
+    event.preventDefault(); event.stopPropagation();
+    printCurrent().catch(function (e) { console.error(e); window.print(); });
+  }, true);
+
   async function buildAndPrint() {
     var textarea = dialog.querySelector('textarea'), status = dialog.querySelector('.lc-batch-status'), button = dialog.querySelector('.lc-batch-start');
     var mode = dialog.querySelector('[name="lc-print-mode"]:checked').value;
@@ -1295,9 +1433,10 @@
       }
       setReactValue(title, original.title); setReactValue(inventory, original.inventory); setReactValue(serial, original.serial); await nextPaint();
       await waitForBatchImages(batch);
-      closeDialog(); document.body.classList.add('lc-batch-printing');
-      var clean = function () { document.body.classList.remove('lc-batch-printing'); if (batch.parentNode) batch.remove(); window.removeEventListener('afterprint', clean); };
-      window.addEventListener('afterprint', clean); window.print(); setTimeout(function () { if (!document.body.classList.contains('lc-batch-printing')) return; clean(); }, 30000);
+      if (!(await fitAndPrint(batch, 'строка ', function (msg) {
+        batch.remove(); button.disabled = false; textarea.disabled = false;
+        status.className = 'lc-batch-status is-error'; status.textContent = msg;
+      }, closeDialog))) return;
     } catch (e) {
       setReactValue(title, original.title); setReactValue(inventory, original.inventory); setReactValue(serial, original.serial);
       batch.remove(); button.disabled = false; textarea.disabled = false; status.className = 'lc-batch-status is-error'; status.textContent = 'Ошибка подготовки: ' + e.message;

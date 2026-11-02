@@ -66,15 +66,5 @@ label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
 @media print{.lc-toast,.lc-print-counter,.lc-theme-toggle{display:none!important}}
 @media (prefers-reduced-motion:reduce){.lc-print-counter.lc-bump .lc-pc-today{animation:none}.lc-toast{transition:none}}
 
-/* Пакетная печать: штрихкод ужимается по высоте, а номер под ним всегда виден */
-@media print{
-  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-codes{height:100%!important}
-  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-barcode{height:100%!important}
-  #print-batch-root .lc-print-label.lc-print-sheet .lc-print-sheet-barcode svg{flex:1 1 0!important;min-height:0!important;height:auto!important;max-height:calc(14mm * var(--k,1))!important}
-  /* Портретные этикетки (100×150, 58×60): коды друг под другом */
-  #print-batch-root .lc-print-label.lc-print-sheet.lc-portrait{grid-template-rows:auto minmax(0,1fr) calc(8mm * var(--k,1))!important}
-  #print-batch-root .lc-portrait .lc-print-sheet-codes{flex-direction:column!important;gap:calc(2mm * var(--k,1))!important}
-  #print-batch-root .lc-portrait.lc-mode-full .lc-print-sheet-barcode,#print-batch-root .lc-portrait.lc-mode-inventory .lc-print-sheet-barcode{flex:1 1 0!important;width:100%!important;max-width:calc(46mm * var(--k,1))!important;height:auto!important;min-height:0!important}
-  #print-batch-root .lc-portrait.lc-mode-full .lc-print-sheet-qr{flex:0 0 auto!important;width:calc(20mm * var(--k,1))!important;height:calc(20mm * var(--k,1))!important}
-  #print-batch-root .lc-portrait.lc-mode-serial .lc-print-sheet-qr{width:calc(30mm * var(--k,1))!important;height:calc(30mm * var(--k,1))!important}
-}
+/* Светлая тема: линия под шапкой — светлая (цвет рамки шёл из тёмной темы) */
+html:not([data-theme="dark"]) [data-testid="page-configurator"]>header{border-bottom-color:#e2e8f0!important}
