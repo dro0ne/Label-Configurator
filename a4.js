@@ -515,16 +515,34 @@
     document.addEventListener('keydown', function (e) { if (root && !root.hidden && e.key === 'Escape' && !selectedObj) close(); });
   }
 
-  function open() {
+  /* Кнопка «Назад» браузера: открытие листа — отдельный шаг истории (адрес не меняется) */
+  function inA4History() { return !!(history.state && history.state.lcA4); }
+  function open(fromHistory) {
+    if (!fromHistory && !inA4History()) {
+      try { history.pushState(Object.assign({}, history.state || {}, { lcA4: true }), '', location.href); } catch (e) {}
+    }
     if (!root) build();
     root.hidden = false; document.body.classList.add('lc-a4-open');
     fitZoom(); updateToolbar(); updateSizeBox();
     libs().catch(function () {}); /* подгружаем заранее */
     setTimeout(function () { page.focus(); }, 50);
   }
-  function close() {
+  function hide() {
     if (!root) return;
     selectObj(null); root.hidden = true; document.body.classList.remove('lc-a4-open');
+  }
+  /* «К этикеткам» / Esc — шаг назад по истории, чтобы «Назад» потом не открывал лист снова */
+  function close() {
+    if (inA4History()) history.back(); else hide();
+  }
+  window.addEventListener('popstate', function () {
+    if (inA4History()) { if (!root || root.hidden) open(true); }
+    else if (root && !root.hidden) hide();
+  });
+  /* обновили страницу, находясь в листе — остаёмся в нём */
+  if (inA4History()) {
+    var reopen = function () { if (document.querySelector('[data-testid="grid-sizes"]')) open(true); else setTimeout(reopen, 200); };
+    reopen();
   }
   window.__lcOpenA4 = open;
 
@@ -542,7 +560,7 @@
     var t2 = sample && sample.children[1] ? sample.children[1].className : 'text-[11px] text-muted-foreground mt-0.5';
     b.innerHTML = '<div class="' + t1 + '">Лист A4</div><div class="' + t2 + '">Обычный принтер</div>';
     b.title = 'Лист A4 210 × 297 мм — редактор как в Word';
-    b.addEventListener('click', open);
+    b.addEventListener('click', function () { open(); });
     grid.appendChild(b);
   }
   new MutationObserver(injectButton).observe(document.body, { childList: true, subtree: true });
