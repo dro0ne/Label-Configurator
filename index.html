@@ -30,7 +30,7 @@
     </script>
     <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-2">
     <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
-    <link rel="stylesheet" href="./print-layout.css?v=20261102-4">
+    <link rel="stylesheet" href="./print-layout.css?v=20261102-5">
     <link rel="stylesheet" href="./lc-extras.css?v=20261102-4">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1259,8 +1259,7 @@
     var barcode = sheet.querySelector('.lc-print-sheet-barcode');
     var qr = sheet.querySelector('.lc-print-sheet-qr');
     var portrait = sheet.classList.contains('lc-portrait');
-    var r = codes.getBoundingClientRect();
-    var rowW = r.width * PX_MM, rowH = r.height * PX_MM, gap = 2.5 * k;
+    var rowW = codes.clientWidth * PX_MM, rowH = codes.clientHeight * PX_MM, gap = 2.5 * k;
     var qrMm = 0;
 
     if (qr) {
@@ -1422,6 +1421,58 @@
     return true;
   }
 
+  /* ── Живое превью: показываем ровно тот лист, который будет напечатан ── */
+  var livePaused = false, liveQueued = false;
+  function currentRow() {
+    var val = function (n) { var f = field(n); return f ? f.value.trim() : ''; };
+    return { title: val('title'), inventory: val('inventory'), serial: val('serial') };
+  }
+  function renderLive() {
+    liveQueued = false;
+    if (livePaused) return;
+    var source = document.getElementById('print-root');
+    if (!source || !source.querySelector('[data-testid="preview-title"],[data-testid="preview-barcode"],[data-testid="preview-qr"],[data-testid="preview-inventory"],[data-testid="preview-serial"],[data-testid="preview-store"]')) return;
+    var live = source.querySelector(':scope > .lc-live');
+    if (!live) {
+      live = document.createElement('div'); live.className = 'lc-live'; live.setAttribute('aria-hidden', 'false');
+      live.addEventListener('click', onLiveClick);
+      source.appendChild(live);
+    }
+    var sheet = createPrintSheet(source, currentRow(), captureBatchLogo(source), true);
+    var safe = document.createElement('div'); safe.className = 'lc-live-safe';
+    var showSafe = document.querySelector('[data-testid="switch-safezone"]');
+    safe.hidden = !(showSafe && showSafe.getAttribute('aria-checked') === 'true');
+    sheet.appendChild(safe);
+    live.replaceChildren(sheet);
+    var problem = fitSheetCodes(sheet);
+    var note = document.querySelector('.lc-live-note');
+    var stage = document.querySelector('[data-testid="stage-preview"]');
+    if (!note && stage) { note = document.createElement('div'); note.className = 'lc-live-note'; note.setAttribute('role', 'status'); stage.appendChild(note); }
+    if (note) { note.hidden = !problem; note.textContent = problem ? '⚠ На этом размере ' + problem + ' — сканер может не прочитать. Выберите этикетку крупнее или отключите Штрих / QR.' : ''; }
+  }
+  function queueLive() { if (!liveQueued) { liveQueued = true; requestAnimationFrame(renderLive); } }
+  function onLiveClick(e) {
+    var map = [['.lc-print-sheet-title', 'title'], ['.lc-print-sheet-meta', null], ['.lc-print-sheet-barcode', 'inventory'], ['.lc-print-sheet-qr', 'serial'], ['.lc-print-sheet-footer', 'store']];
+    for (var i = 0; i < map.length; i++) {
+      var hit = e.target.closest(map[i][0]); if (!hit) continue;
+      var name = map[i][1];
+      if (!name) name = /S\/N/.test(hit.textContent) ? 'serial' : 'inventory';
+      var f = field(name);
+      if (f) { f.scrollIntoView({ block: 'center', behavior: 'smooth' }); f.focus({ preventScroll: true }); if (f.select) f.select(); }
+      return;
+    }
+  }
+  new MutationObserver(function (list) {
+    for (var i = 0; i < list.length; i++) {
+      var t = list[i].target;
+      if (t.nodeType !== 1) t = t.parentNode;
+      if (t && t.closest && (t.closest('.lc-live') || t.closest('#print-batch-root') || t.closest('.lc-live-note'))) continue;
+      queueLive(); return;
+    }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style', 'src', 'aria-checked', 'data-state'] });
+  document.addEventListener('input', function (e) { if (e.target.closest && e.target.closest('[data-testid="panel-settings"]')) queueLive(); }, true);
+  window.addEventListener('resize', queueLive);
+
   /* Кнопка «Печать»: та же надёжная раскладка, что и у списка. */
   async function printCurrent() {
     var source = document.getElementById('print-root');
@@ -1451,7 +1502,7 @@
     var title = field('title'), inventory = field('inventory'), serial = field('serial');
     var source = document.getElementById('print-root');
     if (!title || !inventory || !serial || !source) { status.className = 'lc-batch-status is-error'; status.textContent = 'Не удалось найти поля макета. Обновите страницу и попробуйте снова.'; return; }
-    button.disabled = true; textarea.disabled = true; status.className = 'lc-batch-status';
+    button.disabled = true; textarea.disabled = true; status.className = 'lc-batch-status'; livePaused = true;
     var original = { title: title.value, inventory: inventory.value, serial: serial.value };
     var batch = document.createElement('div'); batch.id = 'print-batch-root';
     var batchLogo = captureBatchLogo(source);
@@ -1465,12 +1516,14 @@
         batch.appendChild(createPrintSheet(source, parsed.rows[i], batchLogo));
       }
       setReactValue(title, original.title); setReactValue(inventory, original.inventory); setReactValue(serial, original.serial); await nextPaint();
+      livePaused = false; queueLive();
       await waitForBatchImages(batch);
       if (!(await fitAndPrint(batch, 'строка ', function (msg) {
         batch.remove(); button.disabled = false; textarea.disabled = false;
         status.className = 'lc-batch-status is-error'; status.textContent = msg;
       }, closeDialog))) return;
     } catch (e) {
+      livePaused = false;
       setReactValue(title, original.title); setReactValue(inventory, original.inventory); setReactValue(serial, original.serial);
       batch.remove(); button.disabled = false; textarea.disabled = false; status.className = 'lc-batch-status is-error'; status.textContent = 'Ошибка подготовки: ' + e.message;
     }
