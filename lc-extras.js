@@ -35,7 +35,7 @@
 
   var SWITCH_ICONS = {
     'switch-title': 'text', 'switch-inventory-text': 'hash', 'switch-serial-text': 'serial',
-    'switch-store': 'store', 'switch-barcode': 'barcode', 'switch-qr': 'qr', 'switch-safezone': 'shield'
+    'switch-store': 'store', 'switch-barcode': 'barcode', 'switch-qr': 'qr'
   };
   var GROUP_ICONS = { 'lc-group-barcode': 'barcode', 'lc-group-qr': 'qr', 'lc-group-text': 'text' };
   function sliderIcon(text) {

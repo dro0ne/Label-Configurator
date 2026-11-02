@@ -71,3 +71,31 @@ html:not([data-theme="dark"]) [data-testid="page-configurator"]>header{border-bo
 
 /* «Печать списка»: автовыбор на всю ширину, ниже «Только инвентарник» и «Только серийник» */
 @media (min-width:621px){.lc-batch-modes.lc-batch-modes-3{grid-template-columns:1fr 1fr!important}}
+
+/* «Типографика» как в Word: старые слайдеры (к старой раскладке) скрыты */
+.lt-container>.lc-group,.lt-container>.lc-divider{display:none!important}
+.lt-panel{display:flex;flex-direction:column;gap:6px}
+.lt-head{margin:6px 0 2px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--lc-pc-muted)}
+.lt-head:first-child{margin-top:0}
+.lt-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:7px 9px;border:1px solid var(--lc-chip-border);border-radius:10px}
+.lt-name{font-size:.8rem;font-weight:600;line-height:1.2}
+.lt-name small{display:block;font-size:.66rem;font-weight:400;color:var(--lc-pc-muted)}
+.lt-tools{display:flex;flex-wrap:wrap;gap:6px}
+.lt-seg{display:inline-flex;border:1px solid var(--lc-chip-border);border-radius:8px;overflow:hidden}
+[data-testid="panel-settings"] .lt-panel .lt-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:30px!important;min-width:0!important;height:30px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-right:1px solid var(--lc-chip-border)!important;border-radius:0!important;background:transparent!important;color:inherit!important;box-shadow:none!important;font-size:.9rem!important;cursor:pointer}
+[data-testid="panel-settings"] .lt-panel .lt-seg>.lt-btn:last-child{border-right:0!important}
+[data-testid="panel-settings"] .lt-panel .lt-btn:hover:not(:disabled){background:var(--lc-chip-ring)!important}
+[data-testid="panel-settings"] .lt-panel .lt-btn.is-on{background:var(--lc-chip-active)!important;color:#fff!important}
+[data-testid="panel-settings"] .lt-panel .lt-reset{border:0!important;background:none!important;box-shadow:none!important;height:auto!important;min-height:0!important}
+.lt-row .lt-tools{margin-left:auto}
+.lt-seg>.lt-btn:last-child{border-right:0}
+.lt-btn svg{width:16px;height:16px}
+.lt-btn:hover:not(:disabled){background:var(--lc-chip-ring)}
+.lt-btn.is-on{background:var(--lc-chip-active);color:#fff}
+.lt-btn:disabled{opacity:.35;cursor:default}
+.lt-btn:focus-visible{outline:2px solid var(--lc-chip-active);outline-offset:-2px}
+.lt-val{display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:0 4px;border-right:1px solid var(--lc-chip-border);font:600 .78rem/1 ui-monospace,Consolas,monospace}
+.lt-foot{display:flex;justify-content:flex-end}
+.lt-reset{border:0;background:none;color:var(--lc-pc-fg);font-size:.75rem;text-decoration:underline;cursor:pointer;padding:4px}
+.lt-safe-row{padding:0 2px}
+@media (max-width:520px){[data-testid="panel-settings"] .lt-panel .lt-btn{width:36px!important;height:36px!important}}

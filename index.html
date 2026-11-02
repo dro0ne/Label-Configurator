@@ -30,14 +30,15 @@
     </script>
     <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261102-2">
     <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
-    <link rel="stylesheet" href="./print-layout.css?v=20261102-5">
-    <link rel="stylesheet" href="./lc-extras.css?v=20261102-4">
+    <link rel="stylesheet" href="./print-layout.css?v=20261102-7">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261102-6">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
-    <script defer src="./lc-extras.js?v=20261102-5"></script>
+    <script defer src="./lc-extras.js?v=20261102-6"></script>
     <link rel="stylesheet" href="./a4.css?v=20261102-7">
     <script defer src="./a4.js?v=20261102-13"></script>
+    <script defer src="./label-typo.js?v=20261102-1"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -1260,14 +1261,17 @@
     var qr = sheet.querySelector('.lc-print-sheet-qr');
     var portrait = sheet.classList.contains('lc-portrait');
     var rowW = codes.clientWidth * PX_MM, rowH = codes.clientHeight * PX_MM, gap = 2.5 * k;
+    /* «Типографика»: ширина штрихкода и размер QR (1 = максимум, что помещается) */
+    var rootCs = getComputedStyle(document.documentElement);
+    var bcF = parseFloat(rootCs.getPropertyValue('--lt-bc-w')) || 1, qrF = parseFloat(rootCs.getPropertyValue('--lt-qr')) || 1;
     var qrMm = 0;
 
     if (qr) {
       var q = qr.firstElementChild, modules = 21;
       var vb = q && q.getAttribute && q.getAttribute('viewBox');
       if (vb) modules = parseFloat(vb.split(/[\s,]+/)[2]) || 21;
-      var maxQ = Math.min(rowH, (barcode ? 18 : 26) * k);
-      if (barcode && !portrait) maxQ = Math.min(maxQ, rowW * 0.42);
+      var maxQ = Math.min(rowH, (barcode ? 18 : 26) * k * qrF);
+      if (barcode && !portrait) maxQ = Math.min(maxQ, rowW * 0.42 * Math.max(1, qrF));
       if (barcode && portrait) maxQ = Math.min(maxQ, rowH * 0.55);
       var dpm = Math.floor(maxQ / (modules * DOT_MM));
       if (dpm < 2) problems.push('QR слишком мелкий');
@@ -1292,8 +1296,10 @@
         var modulesB = Math.round((maxX - minX) / unit);
         var avail = (portrait || !qr) ? rowW : rowW - qrMm - gap;
         /* тихая зона ≈ 6 модулей с каждой стороны (поля этикетки тоже белые) */
-        var d = Math.min(4, Math.floor(avail / ((modulesB + 12) * DOT_MM)));
-        if (d < 2) { d = Math.max(1, Math.floor(avail / (modulesB * DOT_MM))); problems.push('штрихкод слишком длинный'); }
+        var dMax = Math.min(4, Math.floor(avail / ((modulesB + 12) * DOT_MM)));
+        /* «Ширина» из «Типографики» уменьшает штрихкод, но не тоньше 2 точек на полоску */
+        var d = Math.min(dMax, Math.max(2, Math.floor(avail * bcF / ((modulesB + 12) * DOT_MM))));
+        if (dMax < 2) { d = Math.max(1, Math.floor(avail / (modulesB * DOT_MM))); problems.push('штрихкод слишком длинный'); }
         svg.setAttribute('viewBox', minX + ' 0 ' + (maxX - minX) + ' ' + (barH || 1));
         var bwMm = Math.min(modulesB * d * DOT_MM, avail);
         svg.style.width = bwMm.toFixed(3) + 'mm';
@@ -1451,6 +1457,7 @@
     if (note) { note.hidden = !problem; note.textContent = problem ? '⚠ На этом размере ' + problem + ' — сканер может не прочитать. Выберите этикетку крупнее или отключите Штрих / QR.' : ''; }
   }
   function queueLive() { if (!liveQueued) { liveQueued = true; requestAnimationFrame(renderLive); } }
+  window.__lcRefreshLive = queueLive;
   function onLiveClick(e) {
     var map = [['.lc-print-sheet-title', 'title'], ['.lc-print-sheet-meta', null], ['.lc-print-sheet-barcode', 'inventory'], ['.lc-print-sheet-qr', 'serial'], ['.lc-print-sheet-footer', 'store']];
     for (var i = 0; i < map.length; i++) {
