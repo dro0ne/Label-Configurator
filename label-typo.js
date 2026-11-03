@@ -144,7 +144,7 @@
     sliders.forEach(function (f) { f(); });
   }
   function textBlock(key, label, sliderLabel) {
-    var w = slider(sliderLabel, 0.6, 1.8, 0.05, function () { return state[key].s; }, function (v) { state[key].s = v; });
+    var w = slider(sliderLabel, 0.6, 3, 0.05, function () { return state[key].s; }, function (v) { state[key].s = v; });
     w.insertBefore(tools(key, label, true), w.lastChild); /* перед скрытой строкой min/max */
     return w;
   }

@@ -1254,7 +1254,24 @@
 
   /* Подгоняет коды под реальное место (лист должен быть в DOM и видим).
      Возвращает описание проблемы или ''. */
+  /* Крупный текст: если название / Инв / S/N не помещаются над кодами,
+     уменьшаем их ровно настолько, чтобы строки не резались. */
+  function fitSheetText(sheet) {
+    var header = sheet.querySelector('.lc-print-sheet-header');
+    sheet.style.setProperty('--fit', '1');
+    if (!header) return 1;
+    var title = header.querySelector('.lc-print-sheet-title');
+    function over() {
+      return header.scrollHeight > header.clientHeight + 1 ||
+        (title && title.scrollHeight > title.clientHeight + 1);
+    }
+    var fit = 1;
+    while (over() && fit > 0.35) { fit = Math.round((fit - 0.05) * 100) / 100; sheet.style.setProperty('--fit', String(fit)); }
+    return fit;
+  }
+
   function fitSheetCodes(sheet) {
+    fitSheetText(sheet);
     var k = sheet.__k || 1, problems = [];
     var codes = sheet.querySelector('.lc-print-sheet-codes');
     var barcode = sheet.querySelector('.lc-print-sheet-barcode');
