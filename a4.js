@@ -567,10 +567,12 @@
     mine.innerHTML = list.length ? list.map(function (t, i) {
       return '<div class="a4-card' + (t.name === cur ? ' is-current' : '') + '" data-i="' + i + '">' +
         '<button type="button" class="a4-card-open" data-t="open" title="Открыть «' + esc(t.name) + '»">' + thumbHtml(t.html, t.landscape) + '</button>' +
-        '<div class="a4-card-row"><span class="a4-card-name" title="' + esc(t.name) + '">' + esc(t.name) + '</span>' +
-        '<button type="button" class="a4-card-btn" data-t="rename" title="Переименовать" aria-label="Переименовать">✎</button>' +
-        '<button type="button" class="a4-card-btn" data-t="delete" title="Удалить" aria-label="Удалить">🗑</button></div>' +
-        '<small>' + (t.landscape ? 'Альбомная' : 'Книжная') + (t.updated ? ' · ' + fmtDate(t.updated) : '') + '</small></div>';
+        '<div class="a4-card-row"><span class="a4-card-name" title="' + esc(t.name) + '">' + esc(t.name) + '</span></div>' +
+        '<small>' + (t.landscape ? 'Альбомная' : 'Книжная') + (t.updated ? ' · ' + fmtDate(t.updated) : '') + '</small>' +
+        '<div class="a4-card-actions">' +
+          '<button type="button" class="a4-card-btn a4-card-rename" data-t="rename" title="Изменить название «' + esc(t.name) + '»">' + ico('<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>') + '<span>Изменить</span></button>' +
+          '<button type="button" class="a4-card-btn a4-card-del" data-t="delete" title="Удалить «' + esc(t.name) + '»" aria-label="Удалить «' + esc(t.name) + '»">' + ico('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>') + '</button>' +
+        '</div></div>';
     }).join('') : '<p class="a4-tpl-empty">Соберите лист как нужно, впишите название сверху и нажмите «Сохранить» — шаблон появится здесь с картинкой.</p>';
     var bi = side.querySelector('.a4-side-builtin');
     var built = BUILTIN();

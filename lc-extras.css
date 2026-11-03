@@ -103,3 +103,13 @@ html:not([data-theme="dark"]) [data-testid="page-configurator"]>header{border-bo
 .lt-reset{border:0;background:none;color:var(--lc-pc-fg);font-size:.75rem;text-decoration:underline;cursor:pointer;padding:4px}
 .lt-safe-row{padding:0 2px}
 @media (max-width:520px){[data-testid="panel-settings"] .lt-panel .lt-btn{width:36px!important;height:36px!important}}
+
+/* Полосы прокрутки всего сайта — тонкие, в цвет темы */
+:root{--lc-sb-thumb:#c3ccd6;--lc-sb-thumb-hover:#9fadbc}
+html[data-theme="dark"]{--lc-sb-thumb:#3b434d;--lc-sb-thumb-hover:#526070}
+html,.lc-batch-dialog,.lc-batch-input,[data-testid="stage-preview"]{scrollbar-width:thin;scrollbar-color:var(--lc-sb-thumb) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--lc-sb-thumb);border-radius:999px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--lc-sb-thumb-hover);border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}

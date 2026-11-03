@@ -19,7 +19,7 @@ body.lc-a4-open{overflow:hidden}
 .a4-title{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0}
 .a4-title b{font-size:1rem}
 .a4-saved{font-size:.75rem;color:var(--a4-muted);white-space:nowrap}
-.a4-btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-btn);color:var(--a4-fg);font:600 .85rem/1 inherit;cursor:pointer}
+.a4-btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-btn);color:var(--a4-fg);font-weight:600;font-size:.85rem;line-height:1;font-family:inherit;cursor:pointer}
 .a4-btn:hover{background:var(--a4-btn-hover)}
 .a4-print{background:var(--a4-accent);border-color:var(--a4-accent);color:var(--a4-accent-fg)}
 .a4-print:hover{background:var(--a4-accent);filter:brightness(1.08)}
@@ -31,12 +31,12 @@ body.lc-a4-open{overflow:hidden}
 .a4-group{display:flex;align-items:center;gap:3px;padding-right:8px;border-right:1px solid var(--a4-border)}
 .a4-group:last-child{border-right:0}
 .a4-label{font-size:.75rem;color:var(--a4-muted);margin-right:4px}
-.a4-tb{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 8px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--a4-fg);font:500 .85rem/1 inherit;cursor:pointer}
+.a4-tb{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 8px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--a4-fg);font-weight:500;font-size:.85rem;line-height:1;font-family:inherit;cursor:pointer}
 .a4-tb:hover{background:var(--a4-btn-hover)}
 .a4-tb.is-on{background:var(--a4-on);color:var(--a4-on-fg);border-color:var(--a4-on)}
 .a4-tb:focus-visible,.a4-btn:focus-visible,.a4-size:focus-visible{outline:2px solid var(--a4-accent);outline-offset:1px}
 .a4-b,.a4-i,.a4-u{font-size:1rem;width:34px;padding:0}
-.a4-size{height:34px;padding:0 6px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font:500 .85rem inherit}
+.a4-size{height:34px;padding:0 6px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font-weight:500;font-size:.85rem;font-family:inherit}
 .a4-logo-btn{background:#fff;border-color:var(--a4-border);padding:0 7px}
 .a4-logo-btn:hover{background:#fff;border-color:var(--a4-accent)}
 .a4-logo-btn{opacity:.55}
@@ -62,7 +62,7 @@ body.lc-a4-open{overflow:hidden}
 
 .a4-objbar{position:absolute;z-index:5;display:flex;gap:2px;padding:3px;border:1px solid var(--a4-border);border-radius:9px;background:var(--a4-bar);box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .a4-objbar[hidden]{display:none}
-.a4-objbar button{width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:var(--a4-fg);font:700 1rem/1 inherit;cursor:pointer}
+.a4-objbar button{width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:var(--a4-fg);font-weight:700;font-size:1rem;line-height:1;font-family:inherit;cursor:pointer}
 .a4-objbar button:hover{background:var(--a4-btn-hover)}
 .a4-objbar button[hidden]{display:none}
 
@@ -95,9 +95,9 @@ body.lc-a4-open{overflow:hidden}
 }
 
 /* Размер выбранного логотипа / кода в верхней панели */
-.a4-sizebox .a4-pm{width:34px;padding:0;font:700 1.15rem/1 inherit;border-color:var(--a4-border)}
+.a4-sizebox .a4-pm{width:34px;padding:0;font-weight:700;font-size:1.15rem;line-height:1;font-family:inherit;border-color:var(--a4-border)}
 .a4-size-val{min-width:58px;padding:0 4px;text-align:center;font:600 .85rem/1 ui-monospace,Consolas,monospace;white-space:nowrap}
-.a4-sizebox.is-disabled .a4-size-val{font:400 .75rem/1.2 inherit;color:var(--a4-muted);min-width:0;max-width:150px;white-space:normal}
+.a4-sizebox.is-disabled .a4-size-val{font-weight:400;font-size:.75rem;line-height:1.2;font-family:inherit;color:var(--a4-muted);min-width:0;max-width:150px;white-space:normal}
 .a4-sizebox .a4-pm:disabled{opacity:.4;cursor:default}
 .a4-sizebox .a4-pm:disabled:hover{background:transparent}
 @media (max-width:640px){.a4-sizebox.is-disabled .a4-size-val{display:none}}
@@ -167,7 +167,7 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 /* Лист + панель «Мои шаблоны» */
 .a4-main{flex:1;display:flex;min-height:0}
 .a4-main>.a4-scroll{flex:1;min-width:0}
-.a4-side{display:none;flex:0 0 300px;flex-direction:column;gap:10px;padding:14px;overflow:auto;border-left:1px solid var(--a4-border);background:var(--a4-bar)}
+.a4-side{display:none;flex:0 0 340px;flex-direction:column;gap:10px;padding:14px;overflow:auto;border-left:1px solid var(--a4-border);background:var(--a4-bar)}
 #lc-a4.side-open .a4-side{display:flex}
 #lc-a4 [data-act="templates"].is-on{background:var(--a4-on);color:var(--a4-on-fg);border-color:var(--a4-on)}
 .a4-side-head{display:flex;align-items:center;justify-content:space-between}
@@ -179,7 +179,7 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 .a4-side-update span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .a4-side .a4-tpl-fill{margin:0;font-size:.76rem}
 .a4-side h3{margin:6px 0 0;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--a4-muted)}
-.a4-side-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.a4-side-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .a4-side-grid .a4-tpl-empty{grid-column:1/-1}
 .a4-card{display:flex;flex-direction:column;gap:4px;min-width:0}
 .a4-card small{font-size:.66rem;color:var(--a4-muted);line-height:1.25}
@@ -189,8 +189,6 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 .a4-card.is-current .a4-card-open{border-color:var(--a4-accent);box-shadow:0 0 0 2px var(--a4-on)}
 .a4-card-row{display:flex;align-items:center;gap:2px;min-width:0}
 .a4-card-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;font-weight:600}
-.a4-card-btn{flex:0 0 auto;width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--a4-fg);font-size:.8rem;cursor:pointer}
-.a4-card-btn:hover{background:var(--a4-btn-hover)}
 /* миниатюра: настоящий лист, уменьшенный */
 .a4-thumb{position:relative;width:100%;aspect-ratio:210/297;overflow:hidden;background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.15);pointer-events:none}
 .a4-thumb.is-landscape{aspect-ratio:297/210}
@@ -203,7 +201,7 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 .a4-side-note{margin:0;font-size:.7rem;color:var(--a4-muted);line-height:1.4}
 /* узкий экран: панель выезжает справа поверх листа */
 @media (max-width:1099px){
-  #lc-a4.side-open .a4-side{position:fixed;top:0;right:0;bottom:0;z-index:6;width:min(320px,92vw);box-shadow:-12px 0 40px rgba(0,0,0,.3)}
+  #lc-a4.side-open .a4-side{position:fixed;top:0;right:0;bottom:0;z-index:6;width:min(340px,92vw);box-shadow:-12px 0 40px rgba(0,0,0,.3)}
 }
 @media (min-width:1100px){.a4-side-x{display:none}}
 @media (max-width:640px){#lc-a4 .a4-side .a4-btn{width:auto;padding:0 12px}#lc-a4 .a4-side .a4-btn span{display:inline}}
@@ -211,5 +209,27 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 .a4-side>*{flex-shrink:0}
 .a4-side .a4-tpl-name{flex:0 0 40px;height:40px}
 .a4-tpl-save .a4-tpl-name{min-height:40px}
-.a4-card-btn{opacity:.75}
-.a4-card-btn:hover{opacity:1}
+
+/* Кнопки под миниатюрой: крупные и чёткие */
+.a4-card-actions{display:flex;gap:6px;margin-top:2px}
+.a4-card-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:32px;padding:0 10px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font-weight:600;font-size:.78rem;line-height:1;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.a4-card-btn svg{width:16px!important;height:16px!important;flex:0 0 auto}
+.a4-card-rename{flex:1 1 auto;min-width:0;padding:0 8px}
+.a4-card-rename span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a4-card-actions{min-width:0}
+.a4-card-del{width:36px;padding:0;flex:0 0 36px}
+.a4-card-btn:hover{border-color:var(--a4-accent);background:var(--a4-on);color:var(--a4-on-fg)}
+.a4-card-del:hover{border-color:#d32f2f;background:#fdecec;color:#c62828}
+html[data-theme="dark"] .a4-card-del:hover{border-color:#e57373;background:#3a2224;color:#f2b8b8}
+.a4-card-btn:focus-visible{outline:2px solid var(--a4-accent);outline-offset:1px}
+.a4-card-name{font-size:.84rem}
+
+/* Аккуратные полосы прокрутки в цвет темы */
+#lc-a4{--a4-sb-thumb:#c3ccd6;--a4-sb-thumb-hover:#9fadbc;--a4-sb-track:transparent}
+html[data-theme="dark"] #lc-a4{--a4-sb-thumb:#3b434d;--a4-sb-thumb-hover:#526070}
+#lc-a4 .a4-scroll,#lc-a4 .a4-side,#lc-a4 .a4-toolbar,#lc-a4 .a4-dlg,#lc-a4 .a4-dlg-input{scrollbar-width:thin;scrollbar-color:var(--a4-sb-thumb) var(--a4-sb-track)}
+#lc-a4 ::-webkit-scrollbar{width:10px;height:10px}
+#lc-a4 ::-webkit-scrollbar-track{background:var(--a4-sb-track)}
+#lc-a4 ::-webkit-scrollbar-thumb{background:var(--a4-sb-thumb);border-radius:999px;border:3px solid transparent;background-clip:padding-box}
+#lc-a4 ::-webkit-scrollbar-thumb:hover{background:var(--a4-sb-thumb-hover);border:2px solid transparent;background-clip:padding-box}
+#lc-a4 ::-webkit-scrollbar-corner{background:transparent}
