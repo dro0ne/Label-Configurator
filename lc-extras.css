@@ -23,10 +23,10 @@ label.lc-has-ico .lc-ico{width:14px;height:14px;opacity:.9}
 .lc-group-text .lc-group-ico{color:var(--lc-ico-text)}
 
 /* Логотипы на кнопках магазинов */
-[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{position:relative;height:38px!important;padding:4px 12px!important;border-radius:9px!important;background:#fff!important;border:2px solid #c5cfda!important;box-shadow:0 1px 2px rgba(15,23,42,.08);transition:opacity .15s,border-color .15s,box-shadow .15s!important}
-[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip:hover{border-color:var(--lc-chip-active)!important}
-[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{border-color:var(--lc-chip-active)!important;box-shadow:0 0 0 3px var(--lc-chip-ring)!important}
-.lc-chip-logo{display:block;height:22px;width:auto;max-width:none;object-fit:contain;pointer-events:none}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{height:32px!important;padding:4px 10px!important;border-radius:9px!important;background:#fff!important;border:2px solid var(--lc-chip-border)!important;opacity:.82;transition:opacity .15s,border-color .15s,box-shadow .15s!important}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip:hover{opacity:1}
+[data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{opacity:1;border-color:var(--lc-chip-active)!important;box-shadow:0 0 0 3px var(--lc-chip-ring)!important}
+.lc-chip-logo{display:block;height:18px;width:auto;max-width:96px;object-fit:contain;pointer-events:none}
 [data-testid="store-tags-row"] button:not([data-logo]){height:32px!important}
 
 /* Счётчик печати */
@@ -113,8 +113,3 @@ html,.lc-batch-dialog,.lc-batch-input,[data-testid="stage-preview"]{scrollbar-wi
 ::-webkit-scrollbar-thumb{background:var(--lc-sb-thumb);border-radius:999px;border:3px solid transparent;background-clip:padding-box}
 ::-webkit-scrollbar-thumb:hover{background:var(--lc-sb-thumb-hover);border:2px solid transparent;background-clip:padding-box}
 ::-webkit-scrollbar-corner{background:transparent}
-
-/* логотип-чип: в тёмной теме светлая (не слепящая) плашка, выбранный — с галочкой */
-html[data-theme="dark"] [data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip{background:#eef1f4!important;border-color:#5b6672!important}
-html[data-theme="dark"] [data-testid="panel-settings"] [data-testid="store-tags-row"] button.lc-logo-chip.is-active{border-color:var(--lc-chip-active)!important}
-[data-testid="store-tags-row"] button.lc-logo-chip.is-active::after{content:"✓";position:absolute;top:-7px;right:-7px;width:17px;height:17px;border-radius:50%;background:var(--lc-chip-active);color:#fff;font:700 10px/17px Inter,system-ui,sans-serif;text-align:center}
