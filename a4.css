@@ -163,3 +163,53 @@ html[data-theme="dark"] .a4-dlg-status.is-error{color:#f2a3a3}
 .a4-tpl-files{justify-content:flex-start;flex-wrap:wrap}
 .a4-tpl-files label{cursor:pointer}
 @media (max-width:640px){#lc-a4 .a4-tpl-actions .a4-tpl-open{width:auto;padding:0 12px}#lc-a4 .a4-tpl-actions .a4-icon-btn{width:34px;height:34px}.a4-tpl-save{flex-direction:column}.a4-tpl-save .a4-btn{width:100%;justify-content:center}.a4-tpl-save .a4-btn span{display:inline}.a4-tpl-files .a4-btn{width:auto;padding:0 14px}}
+
+/* Лист + панель «Мои шаблоны» */
+.a4-main{flex:1;display:flex;min-height:0}
+.a4-main>.a4-scroll{flex:1;min-width:0}
+.a4-side{display:none;flex:0 0 300px;flex-direction:column;gap:10px;padding:14px;overflow:auto;border-left:1px solid var(--a4-border);background:var(--a4-bar)}
+#lc-a4.side-open .a4-side{display:flex}
+#lc-a4 [data-act="templates"].is-on{background:var(--a4-on);color:var(--a4-on-fg);border-color:var(--a4-on)}
+.a4-side-head{display:flex;align-items:center;justify-content:space-between}
+.a4-side-head b{font-size:.95rem}
+.a4-side .a4-tpl-save{margin:0;flex-direction:column}
+.a4-side .a4-tpl-save .a4-btn{justify-content:center}
+.a4-side-update{justify-content:center;border-color:var(--a4-accent);color:var(--a4-on-fg)}
+.a4-side-update[hidden]{display:none}
+.a4-side-update span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a4-side .a4-tpl-fill{margin:0;font-size:.76rem}
+.a4-side h3{margin:6px 0 0;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--a4-muted)}
+.a4-side-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.a4-side-grid .a4-tpl-empty{grid-column:1/-1}
+.a4-card{display:flex;flex-direction:column;gap:4px;min-width:0}
+.a4-card small{font-size:.66rem;color:var(--a4-muted);line-height:1.25}
+.a4-card-open{display:block;width:100%;padding:6px;border:1px solid var(--a4-border);border-radius:10px;background:var(--a4-bg);cursor:pointer}
+.a4-card-open:hover{border-color:var(--a4-accent)}
+.a4-card-open:focus-visible{outline:2px solid var(--a4-accent);outline-offset:1px}
+.a4-card.is-current .a4-card-open{border-color:var(--a4-accent);box-shadow:0 0 0 2px var(--a4-on)}
+.a4-card-row{display:flex;align-items:center;gap:2px;min-width:0}
+.a4-card-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;font-weight:600}
+.a4-card-btn{flex:0 0 auto;width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--a4-fg);font-size:.8rem;cursor:pointer}
+.a4-card-btn:hover{background:var(--a4-btn-hover)}
+/* миниатюра: настоящий лист, уменьшенный */
+.a4-thumb{position:relative;width:100%;aspect-ratio:210/297;overflow:hidden;background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.15);pointer-events:none}
+.a4-thumb.is-landscape{aspect-ratio:297/210}
+.a4-thumb-page{box-sizing:border-box;width:210mm;min-height:297mm;padding:18mm 18mm 20mm;background:#fff;color:#000;font:14pt/1.35 Arial,Helvetica,sans-serif;overflow-wrap:anywhere;zoom:.155}
+.a4-thumb-page.is-landscape{width:297mm;min-height:210mm;padding:15mm 18mm;zoom:.11}
+.a4-thumb-page p,.a4-thumb-page div{margin:0 0 .35em}
+.a4-side-files{display:flex;flex-wrap:wrap;gap:6px}
+.a4-side-files .a4-btn{height:34px;font-size:.78rem}
+.a4-side-files label{cursor:pointer}
+.a4-side-note{margin:0;font-size:.7rem;color:var(--a4-muted);line-height:1.4}
+/* узкий экран: панель выезжает справа поверх листа */
+@media (max-width:1099px){
+  #lc-a4.side-open .a4-side{position:fixed;top:0;right:0;bottom:0;z-index:6;width:min(320px,92vw);box-shadow:-12px 0 40px rgba(0,0,0,.3)}
+}
+@media (min-width:1100px){.a4-side-x{display:none}}
+@media (max-width:640px){#lc-a4 .a4-side .a4-btn{width:auto;padding:0 12px}#lc-a4 .a4-side .a4-btn span{display:inline}}
+@media print{.a4-side{display:none!important}}
+.a4-side>*{flex-shrink:0}
+.a4-side .a4-tpl-name{flex:0 0 40px;height:40px}
+.a4-tpl-save .a4-tpl-name{min-height:40px}
+.a4-card-btn{opacity:.75}
+.a4-card-btn:hover{opacity:1}
