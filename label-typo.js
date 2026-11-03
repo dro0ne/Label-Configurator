@@ -183,11 +183,24 @@
 
     var reset = document.createElement('div'); reset.className = 'lt-foot';
     reset.innerHTML = '<button type="button" class="lt-reset">Сбросить оформление</button>';
-    reset.querySelector('button').addEventListener('click', function () { state = clone(DEF); save(); apply(); paint(); });
+    reset.querySelector('button').addEventListener('click', resetAll);
     gT.appendChild(reset);
 
     paint();
   }
+  /* Полный сброс оформления: всё к исходному виду, сохранённое в браузере стирается */
+  function resetAll() {
+    state = clone(DEF);
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    if (window.__lcSetLogoScale) window.__lcSetLogoScale(1);
+    apply(); paint();
+  }
+  window.__lcTypoReset = resetAll;
+  /* «Сбросить настройки макета» тоже сбрасывает оформление текста и кодов */
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-testid="button-reset"]')) setTimeout(resetAll, 0);
+  }, true);
+
   new MutationObserver(inject).observe(document.body, { childList: true, subtree: true });
   apply(); inject();
 }());
