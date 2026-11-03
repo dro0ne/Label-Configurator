@@ -435,10 +435,10 @@
     if (!html) { problems.push(role === 'barcode' ? 'штрихкод: «' + value + '» — только латиница и цифры' : 'QR'); obj.remove(); return; }
     var tmp = document.createElement('div'); tmp.innerHTML = html; obj.replaceWith(tmp.firstChild);
   }
-  function buildSheet(row, problems) {
+  function buildSheet(row, problems, srcHtml) {
     var sheet = document.createElement('div');
     sheet.className = 'a4-page a4-batch-page' + (landscape() ? ' is-landscape' : '');
-    sheet.innerHTML = page.innerHTML;
+    sheet.innerHTML = srcHtml != null ? srcHtml : page.innerHTML;
     Array.from(sheet.querySelectorAll('.is-selected')).forEach(function (o) { o.classList.remove('is-selected'); });
     var t = sheet.querySelector('p[data-role="title"]');
     if (t) { if (row.title) setRoleText(t, row.title); else t.remove(); }
@@ -495,6 +495,165 @@
   }
   function closeBatch() { if (batchDlg) { batchDlg.remove(); batchDlg = null; } }
 
+  /* ── Шаблоны листа: готовые + свои (хранятся в браузере, переносятся файлом) ── */
+  var TKEY = 'lc-a4-templates-v1';
+  var tplDlg = null;
+  function loadTpl() {
+    try { var a = JSON.parse(localStorage.getItem(TKEY) || '[]'); return Array.isArray(a) ? a.filter(function (t) { return t && t.name && typeof t.html === 'string'; }) : []; }
+    catch (e) { return []; }
+  }
+  function saveTpl(list) {
+    try { localStorage.setItem(TKEY, JSON.stringify(list)); return true; }
+    catch (e) { alert('Не удалось сохранить шаблоны: в браузере мало места (обычно из‑за больших картинок). Удалите лишние шаблоны или картинки.'); return false; }
+  }
+  function P(role, html, align, extra) { return '<p' + (role ? ' data-role="' + role + '"' : '') + ' style="text-align:' + (align || 'center') + (extra || '') + '">' + html + '</p>'; }
+  function sz(pt, html) { return '<span style="font-size:' + pt + 'pt">' + html + '</span>'; }
+  function BUILTIN() {
+    var t = field('title') || 'Название оборудования', inv = field('inventory') || 'CH00000000', sn = field('serial') || 'SN-0000-000000', logo = currentLogo();
+    var codes = function (bw, qw) { return P('codes', objHtml('barcode', inv, bw, 'barcode') + SPACER + objHtml('qr', sn, qw, 'qr')); };
+    var lg = function (w) { return logo ? P('logo', objHtml('logo', logo, w, 'logo')) : ''; };
+    return [
+      { id: 'b-label', name: 'Крупная этикетка', note: 'Книжная · всё по центру', landscape: false, html: function () { return labelBlockHtml(); } },
+      { id: 'b-plate', name: 'Табличка на оборудование', note: 'Альбомная · крупно', landscape: true, html: function () {
+        return P('title', sz(48, '<b>' + esc(t) + '</b>')) + P('inv', sz(26, '<b>Инв:</b> ' + esc(inv))) + P('sn', sz(26, '<b>S/N:</b> ' + esc(sn))) +
+          codes(120, 60) + lg(110) + '<p><br></p>';
+      } },
+      { id: 'b-card', name: 'Инвентарная карточка', note: 'Книжная · с полями для заполнения', landscape: false, html: function () {
+        return P('', sz(14, '<b>ИНВЕНТАРНАЯ КАРТОЧКА</b>'), 'left') + lg(55).replace('text-align:center', 'text-align:left') +
+          P('title', sz(24, '<b>' + esc(t) + '</b>'), 'left') + P('inv', sz(16, '<b>Инв:</b> ' + esc(inv)), 'left') + P('sn', sz(16, '<b>S/N:</b> ' + esc(sn)), 'left') +
+          P('', sz(14, 'Место установки: ________________________________'), 'left') +
+          P('', sz(14, 'Ответственный: __________________________________'), 'left') +
+          P('', sz(14, 'Дата: ____________    Подпись: _________________'), 'left') +
+          P('codes', objHtml('barcode', inv, 80, 'barcode') + SPACER + objHtml('qr', sn, 40, 'qr'), 'left') + '<p><br></p>';
+      } },
+      { id: 'b-empty', name: 'Пустой лист', note: 'Книжная · чистый лист', landscape: false, html: function () { return '<p><br></p>'; } }
+    ];
+  }
+  function currentRowForTpl() { return { title: field('title'), inventory: field('inventory'), serial: field('serial') }; }
+  function applyTemplate(html, isLandscape, fillData) {
+    selectObj(null);
+    if (fillData) {
+      var r = currentRowForTpl();
+      if (r.title || r.inventory || r.serial) {
+        var probs = [], tmp = buildSheet({ title: r.title || '', inventory: r.inventory, serial: r.serial }, probs, html);
+        /* если поле этикетки пустое — оставляем то, что было в шаблоне */
+        if (!r.title) { var t0 = document.createElement('div'); t0.innerHTML = html; var keep = t0.querySelector('p[data-role="title"]'); if (keep && !tmp.querySelector('p[data-role="title"]')) tmp.insertBefore(keep, tmp.firstChild); }
+        html = tmp.innerHTML;
+      }
+    }
+    page.innerHTML = html || '<p><br></p>';
+    migrate(); cleanupDefaults();
+    setOrientation(isLandscape ? 'landscape' : 'portrait', true);
+    savedRange = null; scheduleSave(); updateToolbar(); updateSizeBox();
+  }
+  function fmtDate(iso) { try { var d = new Date(iso); return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+  function renderTplList() {
+    if (!tplDlg) return;
+    var list = loadTpl(), box = tplDlg.querySelector('.a4-tpl-mine');
+    if (!list.length) { box.innerHTML = '<p class="a4-tpl-empty">Пока нет своих шаблонов. Оформите лист и нажмите «Сохранить текущий лист».</p>'; return; }
+    box.innerHTML = list.map(function (t, i) {
+      return '<div class="a4-tpl-item" data-i="' + i + '"><div class="a4-tpl-info"><b>' + esc(t.name) + '</b><small>' + (t.landscape ? 'Альбомная' : 'Книжная') + (t.updated ? ' · ' + fmtDate(t.updated) : '') + '</small></div>' +
+        '<div class="a4-tpl-actions"><button type="button" class="a4-btn a4-tpl-open" data-t="open">Открыть</button>' +
+        '<button type="button" class="a4-btn a4-icon-btn" data-t="rename" title="Переименовать" aria-label="Переименовать">✎</button>' +
+        '<button type="button" class="a4-btn a4-icon-btn" data-t="delete" title="Удалить" aria-label="Удалить">🗑</button></div></div>';
+    }).join('');
+  }
+  function openTemplates() {
+    if (tplDlg) return;
+    tplDlg = document.createElement('div');
+    tplDlg.className = 'a4-dlg-backdrop';
+    tplDlg.innerHTML =
+      '<section class="a4-dlg a4-tpl" role="dialog" aria-modal="true" aria-labelledby="a4-tpl-title">' +
+        '<div class="a4-dlg-head"><div><h2 id="a4-tpl-title">Шаблоны листа A4</h2>' +
+        '<p>Свои шаблоны хранятся в этом браузере и не пропадают после перезагрузки. Чтобы перенести на другой компьютер — «Скачать в файл», там — «Загрузить из файла».</p></div>' +
+        '<button type="button" class="a4-dlg-x" data-t="close" aria-label="Закрыть">×</button></div>' +
+        '<div class="a4-tpl-save"><input class="a4-tpl-name" type="text" maxlength="60" placeholder="Название шаблона, например: Табличка склад 3" aria-label="Название шаблона">' +
+        '<button type="button" class="a4-btn a4-print" data-t="save">Сохранить текущий лист</button></div>' +
+        '<label class="a4-tpl-fill"><input type="checkbox" checked> Подставить название, Инв и S/N из текущей этикетки при открытии</label>' +
+        '<h3>Мои шаблоны</h3><div class="a4-tpl-mine"></div>' +
+        '<h3>Готовые</h3><div class="a4-tpl-builtin">' + BUILTIN().map(function (t) {
+          return '<div class="a4-tpl-item" data-b="' + t.id + '"><div class="a4-tpl-info"><b>' + t.name + '</b><small>' + t.note + '</small></div>' +
+            '<div class="a4-tpl-actions"><button type="button" class="a4-btn a4-tpl-open" data-t="open-b">Открыть</button></div></div>';
+        }).join('') + '</div>' +
+        '<div class="a4-dlg-actions a4-tpl-files"><button type="button" class="a4-btn" data-t="export">Скачать в файл</button>' +
+        '<label class="a4-btn">Загрузить из файла<input type="file" accept=".json,application/json" hidden></label></div>' +
+      '</section>';
+    root.appendChild(tplDlg);
+    renderTplList();
+    var nameInput = tplDlg.querySelector('.a4-tpl-name');
+    var ask = function (text) { return window.confirm(text); };
+    tplDlg.addEventListener('click', function (e) {
+      if (e.target === tplDlg) { closeTemplates(); return; }
+      var b = e.target.closest('[data-t]'); if (!b) return;
+      var act = b.getAttribute('data-t'), item = b.closest('.a4-tpl-item'), list = loadTpl();
+      var fill = tplDlg.querySelector('.a4-tpl-fill input').checked;
+      if (act === 'close') closeTemplates();
+      else if (act === 'save') {
+        var name = nameInput.value.trim();
+        if (!name) { nameInput.focus(); nameInput.placeholder = 'Введите название шаблона'; nameInput.classList.add('is-error'); return; }
+        var idx = list.findIndex(function (t) { return t.name.toLowerCase() === name.toLowerCase(); });
+        if (idx >= 0 && !ask('Шаблон «' + list[idx].name + '» уже есть. Заменить его текущим листом?')) return;
+        selectObj(null);
+        var tpl = { name: name, html: page.innerHTML, landscape: landscape(), updated: new Date().toISOString() };
+        if (idx >= 0) list[idx] = tpl; else list.unshift(tpl);
+        if (saveTpl(list)) { nameInput.value = ''; nameInput.classList.remove('is-error'); renderTplList(); flash('Шаблон «' + name + '» сохранён'); }
+      }
+      else if (act === 'open') {
+        var t = list[+item.getAttribute('data-i')]; if (!t) return;
+        libs().then(function () { applyTemplate(t.html, t.landscape, fill); closeTemplates(); flash('Открыт шаблон «' + t.name + '»'); });
+      }
+      else if (act === 'open-b') {
+        var id = item.getAttribute('data-b');
+        libs().then(function () {
+          var bt = BUILTIN().filter(function (x) { return x.id === id; })[0];
+          applyTemplate(bt.html(), bt.landscape, false); closeTemplates(); flash('Открыт шаблон «' + bt.name + '»');
+        });
+      }
+      else if (act === 'rename') {
+        var i = +item.getAttribute('data-i'), nn = window.prompt('Новое название шаблона:', list[i].name);
+        if (nn && nn.trim()) { list[i].name = nn.trim().slice(0, 60); if (saveTpl(list)) renderTplList(); }
+      }
+      else if (act === 'delete') {
+        var j = +item.getAttribute('data-i');
+        if (ask('Удалить шаблон «' + list[j].name + '»?')) { list.splice(j, 1); if (saveTpl(list)) renderTplList(); }
+      }
+      else if (act === 'export') {
+        if (!list.length) { flash('Нет своих шаблонов для сохранения'); return; }
+        var blob = new Blob([JSON.stringify({ app: 'label-configurator-a4', version: 1, templates: list }, null, 1)], { type: 'application/json' });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'шаблоны-A4-' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      }
+    });
+    tplDlg.querySelector('input[type=file]').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        try {
+          var data = JSON.parse(rd.result), incoming = (data && data.templates) || [];
+          incoming = incoming.filter(function (t) { return t && typeof t.name === 'string' && typeof t.html === 'string'; });
+          if (!incoming.length) throw new Error('empty');
+          var list = loadTpl(), added = 0, replaced = 0;
+          incoming.forEach(function (t) {
+            var tpl = { name: t.name.slice(0, 60), html: t.html, landscape: !!t.landscape, updated: t.updated || new Date().toISOString() };
+            var k = list.findIndex(function (x) { return x.name.toLowerCase() === tpl.name.toLowerCase(); });
+            if (k >= 0) { list[k] = tpl; replaced++; } else { list.push(tpl); added++; }
+          });
+          if (saveTpl(list)) { renderTplList(); flash('Загружено: новых ' + added + (replaced ? ', заменено ' + replaced : '')); }
+        } catch (er) { alert('Это не файл шаблонов листа A4.'); }
+      };
+      rd.readAsText(f); e.target.value = '';
+    });
+    nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') tplDlg.querySelector('[data-t="save"]').click(); });
+    tplDlg.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeTemplates(); } });
+    setTimeout(function () { nameInput.focus(); }, 30);
+  }
+  function closeTemplates() { if (tplDlg) { tplDlg.remove(); tplDlg = null; } }
+  function flash(text) {
+    var st = root.querySelector('.a4-saved'); if (!st) return;
+    st.textContent = text; clearTimeout(st.__f); st.__f = setTimeout(function () { st.textContent = 'Сохранено'; }, 3500);
+  }
+
   function runBatch() {
     var ta = batchDlg.querySelector('textarea'), status = batchDlg.querySelector('.a4-dlg-status');
     var mode = batchDlg.querySelector('[name="a4-batch-mode"]:checked').value;
@@ -533,6 +692,7 @@
         '<div class="a4-title"><b>Лист A4</b><span class="a4-saved">Сохранено</span><span class="a4-warn" role="alert" hidden>Штрихкод не обновлён: в Инв только латиница, цифры и знаки</span></div>' +
         '<button type="button" class="a4-btn a4-icon-btn" data-act="theme" data-testid="a4-button-theme"></button>' +
         '<span class="a4-badge" data-testid="a4-badge-size">A4 · книжная</span>' +
+        '<button type="button" class="a4-btn" data-act="templates" title="Готовые и свои шаблоны листа">' + ico('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>') + '<span>Шаблоны</span></button>' +
         '<button type="button" class="a4-btn" data-act="batch" title="Напечатать список: на каждую строку — свой лист A4 по этому шаблону">' + ico('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>') + '<span>Печать списка</span></button>' +
         '<button type="button" class="a4-btn a4-print" data-act="print">' + ico('<path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/>') + '<span>Печать A4</span></button>' +
       '</div>' +
@@ -627,6 +787,7 @@
       if (act === 'close') close();
       else if (act === 'print') printA4();
       else if (act === 'batch') openBatch();
+      else if (act === 'templates') openTemplates();
       else if (act === 'theme') {
         var main = document.querySelector('[data-testid="button-theme"]');
         if (main) main.click();
@@ -663,7 +824,12 @@
     document.addEventListener('selectionchange', function () { if (root && !root.hidden) { rememberSelection(); updateToolbar(); } });
     root.querySelector('.a4-scroll').addEventListener('scroll', placeObjBar);
     window.addEventListener('resize', fitZoom);
-    document.addEventListener('keydown', function (e) { if (root && !root.hidden && e.key === 'Escape' && !selectedObj && !batchDlg) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (!root || root.hidden || e.key !== 'Escape') return;
+      if (tplDlg) { closeTemplates(); return; }
+      if (batchDlg) { closeBatch(); return; }
+      if (!selectedObj) close();
+    });
   }
 
   /* Кнопка «Назад» браузера: открытие листа — отдельный шаг истории (адрес не меняется) */
@@ -680,7 +846,7 @@
   }
   function hide() {
     if (!root) return;
-    closeBatch();
+    closeBatch(); closeTemplates();
     selectObj(null); root.hidden = true; document.body.classList.remove('lc-a4-open');
   }
   /* «К этикеткам» / Esc — шаг назад по истории, чтобы «Назад» потом не открывал лист снова */
