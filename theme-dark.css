@@ -81,7 +81,7 @@ body{background-image:radial-gradient(circle at 70% -20%,rgba(74,119,164,.13),tr
 [data-testid="button-print"] svg,[data-testid="button-batch-print"] svg{color:currentColor!important}
 [data-testid="panel-settings"]>div>div:last-child{background:#1f2328!important}
 [data-testid="panel-settings"]>div>div:last-child [class*="bg-muted"],[data-testid="panel-settings"]>div>div:last-child [class*="bg-secondary"],[data-testid="panel-settings"]>div>div:last-child [class*="bg-accent"]{background:#23282e!important}
-[data-testid="panel-settings"]>div>div:last-child [class*="bg-primary"]{background:#6087ad!important;color:#fff!important}
+[data-testid="panel-settings"]>div>div:last-child [class*="bg-primary"]:not([role="switch"]){background:#6087ad!important;color:#fff!important}
 [data-testid="panel-settings"] [class*="text-foreground"],[data-testid="panel-settings"] [class*="text-card-foreground"]{color:#dce1e7!important}
 [data-testid="panel-settings"] hr{border-color:#353d45!important}
 [data-testid="panel-settings"] select{border:1px solid #3c4553!important;background:#1b1f23!important;color:#dce1e7!important}

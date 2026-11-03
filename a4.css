@@ -8,7 +8,7 @@
 }
 html[data-theme="dark"] #lc-a4{
   --a4-bg:#15181c;--a4-bar:#1f2328;--a4-border:#373f47;--a4-fg:#dce1e7;--a4-muted:#99a7b8;
-  --a4-btn:#262b31;--a4-btn-hover:#2e343b;--a4-on:#2b3a4a;--a4-on-fg:#a9c8ea;--a4-accent:#4f88c2;--a4-accent-fg:#fff;
+  --a4-btn:#262b31;--a4-btn-hover:#2e343b;--a4-on:#2f4a66;--a4-on-fg:#cfe2f7;--a4-accent:#4f88c2;--a4-accent-fg:#fff;
   --a4-hint-bg:#2e2a1d;--a4-hint-border:#6b5a2c;--a4-hint-fg:#ecd9a6;
 }
 #lc-a4[hidden]{display:none}
@@ -37,12 +37,16 @@ body.lc-a4-open{overflow:hidden}
 .a4-tb:focus-visible,.a4-btn:focus-visible,.a4-size:focus-visible{outline:2px solid var(--a4-accent);outline-offset:1px}
 .a4-b,.a4-i,.a4-u{font-size:1rem;width:34px;padding:0}
 .a4-size{height:34px;padding:0 6px;border:1px solid var(--a4-border);border-radius:8px;background:var(--a4-btn);color:var(--a4-fg);font-weight:500;font-size:.85rem;font-family:inherit}
-.a4-logo-btn{background:#fff;border-color:var(--a4-border);padding:0 7px}
-.a4-logo-btn:hover{background:#fff;border-color:var(--a4-accent)}
-.a4-logo-btn{opacity:.55}
-.a4-logo-btn.is-on{opacity:1;border-color:var(--a4-accent);box-shadow:0 0 0 2px var(--a4-on)}
+/* логотипы магазинов: всегда на белой «плашке», чтобы логотип читался в любой теме */
+#lc-a4 .a4-logo-btn,#lc-a4 .a4-logo-btn:hover,#lc-a4 .a4-logo-btn.is-on{background:#fff;color:#1f2933}
+.a4-logo-btn{border:1.5px solid var(--a4-border);padding:0 7px}
+.a4-logo-btn:not(.is-on) img{opacity:.45;filter:grayscale(1)}
+.a4-logo-btn:not(.is-on):hover img{opacity:.8;filter:none}
+.a4-logo-btn:hover{border-color:var(--a4-accent)}
+.a4-logo-btn.is-on{border-color:var(--a4-accent);box-shadow:0 0 0 2px var(--a4-accent)}
+/* «На листе»: включено — заливка и рамка, выключено — пунктир и серый текст */
 .a4-toggle:not(.a4-logo-btn){border-color:var(--a4-border)}
-.a4-toggle:not(.a4-logo-btn):not(.is-on){color:var(--a4-muted)}
+.a4-toggle:not(.a4-logo-btn):not(.is-on){color:var(--a4-muted);border-style:dashed;background:transparent}
 .a4-toggle.is-on:not(.a4-logo-btn){border-color:var(--a4-on-fg)}
 .a4-logo-btn img{display:block;height:16px;width:auto;max-width:78px}
 
