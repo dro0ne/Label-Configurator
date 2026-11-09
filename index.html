@@ -1077,6 +1077,10 @@
   .lc-batch-close{border:0;background:transparent;color:#64748b;font-size:28px;line-height:1;cursor:pointer}
   .lc-batch-body{padding:8px 22px 22px}.lc-batch-example{margin:0 0 8px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:#475569}
   .lc-batch-input{box-sizing:border-box;width:100%;min-height:240px;resize:vertical;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;color:#0f172a;background:#fff}
+  .lc-batch-editor{position:relative}.lc-batch-editor .lc-batch-input{display:block;white-space:pre;overflow-wrap:normal;overflow:auto}
+  .lc-batch-highlights{position:absolute;overflow:hidden;pointer-events:none;z-index:1}.lc-batch-highlight{position:absolute;left:0;right:0;box-sizing:border-box;border-left:3px solid #dc2626;background:rgba(239,68,68,.16)}
+  .lc-batch-errors{display:grid;gap:4px;max-height:160px;overflow:auto;margin-top:4px}.lc-batch-errors:empty{display:none}.lc-batch-error-link{display:block;width:100%;padding:6px 8px;border:1px solid rgba(220,38,38,.25);border-radius:6px;background:rgba(239,68,68,.08);color:#b91c1c;font:inherit;font-size:12px;text-align:left;overflow-wrap:anywhere;cursor:pointer}.lc-batch-error-link:hover{background:rgba(239,68,68,.16)}.lc-batch-error-link:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+  html[data-theme="dark"] .lc-batch-error-link{color:#fca5a5;border-color:rgba(252,165,165,.35)}
   .lc-batch-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:5px 0 16px}.lc-batch-mode{position:relative;display:block}.lc-batch-mode input{position:absolute;opacity:0;pointer-events:none}.lc-batch-mode-content{display:block;height:100%;padding:12px;border:1.5px solid #cbd5e1;border-radius:10px;background:#f8fafc;cursor:pointer;transition:.15s}.lc-batch-mode-content strong,.lc-batch-mode-content small{display:block}.lc-batch-mode-content strong{font-size:13px;color:#0f172a}.lc-batch-mode-content small{margin-top:3px;font-size:11px;line-height:1.35;color:#64748b}.lc-batch-mode input:checked+.lc-batch-mode-content{border-color:#01696f;background:#ecfdf5;box-shadow:0 0 0 2px rgba(1,105,111,.12)}
   .lc-batch-status{min-height:20px;margin-top:8px;color:#475569;font-size:13px}.lc-batch-status.is-error{color:#b91c1c}
   .lc-print-note{margin-top:12px;padding:10px 12px;border:1px solid #f0c36a;border-radius:8px;background:#fff8e6;color:#744d08;font-size:12px;line-height:1.45}.lc-print-note strong{font-weight:700}
@@ -1337,7 +1341,8 @@
 
   function parseRows(text, mode) {
     mode = mode || 'auto';
-    var rows = [], errors = [], seenData = false;
+    var rows = [], errors = [], errorDetails = [], seenData = false;
+    function invalid(line, reason) { errors.push(line); errorDetails.push({ line: line, reason: reason }); }
     text.split(/\r?\n/).forEach(function (raw, index) {
       if (!raw.trim()) return;
       var separator = raw.indexOf('\t') >= 0 ? '\t' : (raw.indexOf(';') >= 0 ? ';' : '|');
@@ -1346,7 +1351,8 @@
       if (!seenData && /^(назв|наимен|оборуд|name|title)/i.test(cols[0] || '') && /^(инв|inv|номер|№|s\s*\/?\s*n|сер|с\/н|serial|$)/i.test(cols[1] || '')) return;
       seenData = true;
       if (cols.length > 3) cols = cols.slice(0, 3); /* лишние столбцы Excel не должны попадать в QR */
-      if (cols.length < 2 || !cols[0]) { errors.push(index + 1); return; }
+      if (!cols[0]) { invalid(index + 1, 'Не указано название оборудования.'); return; }
+      if (cols.length < 2) { invalid(index + 1, 'Не найден столбец с номером. Разделите название и номер табуляцией, «;» или «|».'); return; }
       var row = { title: cols[0], inventory: '', serial: '', mode: '' };
       if (mode === 'inventory') {
         /* принудительно: только инвентарник (2-й столбец), S/N игнорируется */
@@ -1360,15 +1366,72 @@
         row.serial = cols[2] ? (cols[2].replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || cols[2]) : '';
       } else if (detectCodeType(cols[1]) === 'serial') row.serial = cols[1].replace(/^(?:s\s*\/?\s*n|serial|ser|сер(?:ийный)?|с\s*\/\s*н|сн)(?:\s*(?:номер|№|no\.?))?(?:\s*[:.№#]\s*|\s+)/i, '') || cols[1];
       else row.inventory = cols[1];
-      if (!row.inventory && !row.serial) { errors.push(index + 1); return; }
+      if (!row.inventory && !row.serial) {
+        invalid(index + 1, mode === 'inventory' ? 'Не указан инвентарный номер во 2-м столбце.' :
+          mode === 'serial' ? 'Не указан S/N в ' + (cols.length >= 3 ? '3-м' : '2-м') + ' столбце.' : 'Не указан инвентарный номер или S/N.');
+        return;
+      }
       row.mode = row.inventory && row.serial ? 'full' : (row.inventory ? 'inventory' : 'serial');
       rows.push(row);
     });
-    return { rows: rows, errors: errors };
+    return { rows: rows, errors: errors, errorDetails: errorDetails };
   }
 
   window.__lcParseRows = parseRows; /* тот же разбор списка нужен листу A4 */
-  function closeDialog() { if (dialog) { dialog.remove(); dialog = null; } }
+  var batchResizeObserver = null;
+  function closeDialog() {
+    if (batchResizeObserver) { batchResizeObserver.disconnect(); batchResizeObserver = null; }
+    if (dialog) { dialog.remove(); dialog = null; }
+  }
+
+  /* Подсветка поверх textarea: не мешает вводу и остаётся на нужной строке при прокрутке. */
+  function syncBatchHighlights() {
+    if (!dialog) return;
+    var input = dialog.querySelector('.lc-batch-input'), layer = dialog.querySelector('.lc-batch-highlights');
+    var css = getComputedStyle(input), lineHeight = parseFloat(css.lineHeight);
+    layer.style.top = input.clientTop + 'px'; layer.style.left = input.clientLeft + 'px';
+    layer.style.width = input.clientWidth + 'px'; layer.style.height = input.clientHeight + 'px';
+    Array.from(layer.children).forEach(function (mark) {
+      mark.style.top = (parseFloat(css.paddingTop) + (Number(mark.dataset.line) - 1) * lineHeight - input.scrollTop) + 'px';
+      mark.style.height = lineHeight + 'px';
+    });
+  }
+
+  function focusBatchLine(line) {
+    if (!dialog) return;
+    var input = dialog.querySelector('.lc-batch-input'), lines = input.value.split('\n'), start = 0;
+    for (var i = 0; i < line - 1; i++) start += lines[i].length + 1;
+    input.focus(); input.setSelectionRange(start, start + lines[line - 1].length);
+    var css = getComputedStyle(input), lineHeight = parseFloat(css.lineHeight);
+    input.scrollTop = Math.max(0, parseFloat(css.paddingTop) + (line - 1) * lineHeight - (input.clientHeight - lineHeight) / 2);
+    input.scrollLeft = 0;
+    syncBatchHighlights();
+  }
+
+  function validateBatchInput(parsed, focusFirst) {
+    var input = dialog.querySelector('.lc-batch-input'), status = dialog.querySelector('.lc-batch-status');
+    var layer = dialog.querySelector('.lc-batch-highlights'), list = dialog.querySelector('.lc-batch-errors');
+    parsed = parsed || parseRows(input.value, dialog.querySelector('[name="lc-print-mode"]:checked').value);
+    layer.replaceChildren(); list.replaceChildren();
+    input.setAttribute('aria-invalid', parsed.errors.length ? 'true' : 'false');
+    status.className = 'lc-batch-status' + (parsed.errors.length ? ' is-error' : '');
+    if (parsed.errors.length) {
+      status.textContent = 'Не удаётся напечатать строки: ' + parsed.errors.join(', ') + '. Нажмите на ошибку, чтобы перейти к строке.';
+      parsed.errorDetails.forEach(function (error) {
+        var mark = document.createElement('div'); mark.className = 'lc-batch-highlight'; mark.dataset.line = error.line;
+        layer.appendChild(mark);
+        var link = document.createElement('button'); link.type = 'button'; link.className = 'lc-batch-error-link';
+        link.textContent = 'Строка ' + error.line + ': ' + error.reason;
+        link.onclick = function () { focusBatchLine(error.line); };
+        list.appendChild(link);
+      });
+    } else {
+      status.textContent = parsed.rows.length ? 'Готово к печати: ' + parsed.rows.length + ' этикеток.' : status.dataset.help;
+    }
+    syncBatchHighlights();
+    if (focusFirst && parsed.errors.length) focusBatchLine(parsed.errors[0]);
+    return parsed;
+  }
   function openDialog() {
     if (dialog) return;
     dialog = document.createElement('div');
@@ -1382,8 +1445,10 @@
       '<label class="lc-batch-mode"><input type="radio" name="lc-print-mode" value="inventory"><span class="lc-batch-mode-content"><strong>Инвентарник</strong><small>Название, магазин, инвентарник и штрихкод</small></span></label>' +
       '<label class="lc-batch-mode"><input type="radio" name="lc-print-mode" value="serial"><span class="lc-batch-mode-content"><strong>S/N</strong><small>Название, магазин, S/N и QR‑код</small></span></label></div>' +
       '<p class="lc-batch-example">Название оборудования ; Инвентарный номер ; Серийный номер</p>' +
-      '<textarea class="lc-batch-input" spellcheck="false" placeholder="Ноутбук Lenovo ThinkPad T14; CH00209875; SN-2026-000184\nМонитор Samsung 24; CH00209876; SN-2026-000185"></textarea>' +
-      '<div class="lc-batch-status">Можно вставить данные из Excel (3 столбца) или разделить поля точкой с запятой.</div>' +
+      '<div class="lc-batch-editor"><textarea class="lc-batch-input" wrap="off" spellcheck="false" aria-label="Список этикеток: одна строка на этикетку" aria-describedby="lc-batch-status" placeholder="Ноутбук Lenovo ThinkPad T14; CH00209875; SN-2026-000184\nМонитор Samsung 24; CH00209876; SN-2026-000185"></textarea>' +
+      '<div class="lc-batch-highlights" aria-hidden="true"></div></div>' +
+      '<div class="lc-batch-status" id="lc-batch-status" role="status" aria-live="polite">Можно вставить данные из Excel (3 столбца) или разделить поля точкой с запятой.</div>' +
+      '<div class="lc-batch-errors" aria-label="Ошибки в строках списка"></div>' +
       '<div class="lc-print-note"><strong>В окне печати:</strong> отключите «Колонтитулы», чтобы на этикетках не было даты, localhost и номера страницы.</div>' +
       '<div class="lc-batch-actions"><button class="lc-batch-btn lc-batch-cancel" type="button">Отмена</button><button class="lc-batch-btn lc-batch-btn-primary lc-batch-start" type="button">Печатать все</button></div></div></section>';
     document.body.appendChild(dialog);
@@ -1406,6 +1471,12 @@
     dialog.addEventListener('click', function (e) { if (e.target === dialog) closeDialog(); });
     dialog.querySelector('.lc-batch-start').onclick = buildAndPrint;
     Array.from(dialog.querySelectorAll('[name="lc-print-mode"]')).forEach(function (radio) { radio.onchange = updateBatchHelp; });
+    dialog.querySelector('textarea').addEventListener('input', function () { validateBatchInput(); });
+    dialog.querySelector('textarea').addEventListener('scroll', syncBatchHighlights);
+    if (window.ResizeObserver) {
+      batchResizeObserver = new ResizeObserver(syncBatchHighlights);
+      batchResizeObserver.observe(dialog.querySelector('textarea'));
+    }
     dialog.querySelector('textarea').focus();
   }
 
@@ -1427,6 +1498,8 @@
       input.placeholder = 'Ноутбук Lenovo ThinkPad T14; CH00209875; SN-2026-000184\nМонитор Samsung 24; CH00209876; SN-2026-000185';
       status.textContent = 'Можно смешивать строки из 2 и 3 столбцов — тип этикетки определяется автоматически.';
     }
+    status.dataset.help = status.textContent;
+    validateBatchInput();
   }
 
   /* Подгоняет коды, предупреждает о нечитаемых и отправляет листы на печать. */
@@ -1528,8 +1601,8 @@
   async function buildAndPrint() {
     var textarea = dialog.querySelector('textarea'), status = dialog.querySelector('.lc-batch-status'), button = dialog.querySelector('.lc-batch-start');
     var mode = dialog.querySelector('[name="lc-print-mode"]:checked').value;
-    var parsed = parseRows(textarea.value, mode);
-    if (parsed.errors.length) { status.className = 'lc-batch-status is-error'; status.textContent = 'Проверьте строки: ' + parsed.errors.join(', ') + '. Найдены пустые или неполные данные.'; return; }
+    var parsed = validateBatchInput(parseRows(textarea.value, mode), true);
+    if (parsed.errors.length) return;
     if (!parsed.rows.length) { status.className = 'lc-batch-status is-error'; status.textContent = 'Добавьте хотя бы одну строку с данными.'; return; }
     var title = field('title'), inventory = field('inventory'), serial = field('serial');
     var source = document.getElementById('print-root');
