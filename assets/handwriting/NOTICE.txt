@@ -1,0 +1,22 @@
+Local handwriting module for Label Configurator.
+
+Application integration, selection handling, segmentation, decoding and review
+are implemented in handwriting.js and handwriting-worker.js.
+
+The pretrained recognition weights are not an original trained model of this
+application. They are PP-OCRv6 Medium Cyrillic by Metrika Labs, based on
+PP-OCRv6 by PaddlePaddle. See MODEL-LICENSE.txt and MODEL-NOTICE.txt.
+Source: https://huggingface.co/metrika-labs/PP-OCRv6_medium_rec_cyrillic_onnx
+Revision: 4f35024ef590b24c12101abfa5184c7fbb5f7299
+
+ONNX Runtime Web 1.31.1 is distributed under the MIT License.
+See runtime/LICENSE.txt.
+Source: https://www.npmjs.com/package/onnxruntime-web/v/1.31.1
+Runtime: https://onnxruntime.ai/
+
+The optional Russian lexicon is licensed separately under CC BY 2.5.
+See LEXICON-NOTICE.txt for its source, pinned revision and transformations.
+
+All inference runs on the user's device. No recognition API, service account
+or paid per-image endpoint is used. Training examples are stored only after
+an explicit user action and are never included in the repository.

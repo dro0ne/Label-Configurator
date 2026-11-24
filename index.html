@@ -52,10 +52,17 @@
     <link rel="stylesheet" href="./a4.css?v=20261103-11">
     <script defer src="./a4.js?v=20261103-6"></script>
     <script defer src="./label-typo.js?v=20261123-1"></script>
-    <link rel="stylesheet" href="./photo-text.css?v=20261124-2">
-    <script defer src="./photo-ocr.js?v=20261124-2"></script>
-    <script defer src="./photo-barcode.js?v=20261124-2"></script>
-    <script defer src="./photo-text.js?v=20261124-2"></script>
+    <link rel="stylesheet" href="./photo-text.css?v=20261124-14">
+    <link rel="stylesheet" href="./form-controls.css?v=20261124-3">
+    <link rel="stylesheet" href="./disclosure.css?v=20261124-2">
+    <script defer src="./disclosure.js?v=20261124-2"></script>
+    <script defer src="./photo-ocr.js?v=20261124-3"></script>
+    <script defer src="./photo-barcode.js?v=20261124-4"></script>
+    <script defer src="./handwriting.js?v=20261124-13"></script>
+    <script defer src="./photo-auto.js?v=20261124-4"></script>
+    <script defer src="./photo-text.js?v=20261124-13"></script>
+    <link rel="stylesheet" href="./select-menu.css?v=20261124-2">
+    <script defer src="./select-menu.js?v=20261124-3"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -335,9 +342,9 @@
       var imgData = canvas.toDataURL('image/png');
       var doc = new (getJsPDF())({
         orientation: physW >= physH ? 'landscape' : 'portrait',
-        unit: 'mm', format: [physW, physH]
+        unit: 'mm', format: [physW, physH], compress: true
       });
-      doc.addImage(imgData, 'PNG', 0, 0, physW, physH);
+      doc.addImage(imgData, 'PNG', 0, 0, physW, physH, undefined, 'FAST');
       doc.save('label.pdf');
     }).catch(function (err) {
       wrapper.remove(); metricsStyle.remove();
@@ -585,13 +592,15 @@
   }
 
   /* Create a collapsible group wrapper with a title */
+  var groupSequence = 0;
   function makeGroup(title, open) {
     var group = document.createElement('div');
     var kind = title === 'Штрихкод' ? 'barcode' : (title.indexOf('QR') === 0 ? 'qr' : 'text');
     group.className = 'lc-group lc-group-' + kind;
 
-    var hdr = document.createElement('div');
+    var hdr = document.createElement('button'); hdr.type = 'button';
     hdr.className = 'lc-group-header';
+    hdr.setAttribute('aria-expanded', String(open));
 
     var titleEl = document.createElement('span');
     titleEl.className = 'lc-group-title';
@@ -607,18 +616,22 @@
     chevron.setAttribute('stroke-linejoin', 'round');
     chevron.setAttribute('class', 'lc-group-chevron' + (open ? ' open' : ''));
     var path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    path.setAttribute('points', '6 9 12 15 18 9');
+    path.setAttribute('points', '9 6 15 12 9 18');
     chevron.appendChild(path);
 
-    hdr.appendChild(titleEl);
     hdr.appendChild(chevron);
+    hdr.appendChild(titleEl);
 
     var body = document.createElement('div');
     body.className = 'lc-group-body' + (open ? '' : ' collapsed');
+    body.id = 'lc-settings-group-' + (++groupSequence); body.hidden = !open;
+    hdr.setAttribute('aria-controls', body.id);
 
     hdr.addEventListener('click', function () {
-      var isOpen = !body.classList.contains('collapsed');
-      body.classList.toggle('collapsed', isOpen);
+      var isOpen = hdr.getAttribute('aria-expanded') === 'true';
+      hdr.setAttribute('aria-expanded', String(!isOpen));
+      if (window.__lcDisclosure) window.__lcDisclosure.set(body, !isOpen);
+      else { body.hidden = isOpen; body.classList.toggle('collapsed', isOpen); }
       chevron.classList.toggle('open', !isOpen);
     });
 

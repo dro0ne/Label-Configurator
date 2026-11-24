@@ -36,7 +36,7 @@
           for (var at = 0; at < input.data.length; at += 4) input.data[at] = input.data[at + 1] = input.data[at + 2] = input.data[at] < 200 ? 0 : 255;
         }
         var before = found.length;
-        var results = await reader.readBarcodes(input, { formats: ['Code128', 'EAN13', 'EAN8', 'UPCA', 'UPCE', 'Code93'], tryHarder: true, tryRotate: true, tryInvert: true, tryDownscale: false, binarizer: pass === 1 ? 'GlobalHistogram' : 'LocalAverage', maxNumberOfSymbols: 8 });
+        var results = await reader.readBarcodes(input, { formats: ['Code128', 'EAN13', 'EAN8', 'UPCA', 'UPCE', 'Code93', 'Code39'], tryHarder: true, tryRotate: true, tryInvert: true, tryDownscale: false, binarizer: pass === 1 ? 'GlobalHistogram' : 'LocalAverage', maxNumberOfSymbols: 8 });
         results.forEach(function (result) {
           if (!result.text || result.error || found.some(function (r) { return r.text === result.text; })) return;
           var corners = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'].map(function (key) { return image.point(result.position[key]); });
@@ -47,7 +47,8 @@
           var x = Math.max(0, Math.floor(Math.min.apply(null, points.map(function (p) { return p.x; }))) - 12), y = Math.max(0, Math.floor(Math.min.apply(null, points.map(function (p) { return p.y; }))) - 12);
           var width = Math.min(image.canvas.width - x, Math.ceil(Math.max.apply(null, points.map(function (p) { return p.x; }))) - x + 12), height = Math.min(image.canvas.height - y, Math.ceil(Math.max.apply(null, points.map(function (p) { return p.y; }))) - y + 12);
           var preview = document.createElement('canvas'); preview.width = Math.max(1, width); preview.height = Math.max(1, height); preview.getContext('2d').drawImage(image.canvas, x, y, width, height, 0, 0, width, height);
-          found.push({ text: result.text, format: result.format, canvas: preview, confidence: 100 });
+          found.push({ text: result.text, format: result.format, canvas: preview, confidence: 100,
+            checksum: ['Code128', 'EAN13', 'EAN8', 'UPCA', 'UPCE', 'Code93'].indexOf(result.format) !== -1 });
         });
         if (found.length > before) break;
       }

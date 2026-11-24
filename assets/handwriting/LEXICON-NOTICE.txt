@@ -1,0 +1,10 @@
+Russian word list derived from the University of Leeds Corpus.
+Corpus editing and cleanup by hingston.
+Source: https://github.com/hingston/russian
+Pinned revision: b144235f90fc720ef310f304e31acc3825d62a1b
+Source file: 100000-russian-words.txt
+License: Creative Commons Attribution 2.5 (CC BY 2.5)
+https://creativecommons.org/licenses/by/2.5/
+Changes for this application: keep lowercase Cyrillic words of length 5-30,
+fold ё to е, deduplicate and sort. Used only to rank close OCR candidates.
+This list contains no words extracted from the user's test photographs.

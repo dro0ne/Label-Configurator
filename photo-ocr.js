@@ -363,5 +363,5 @@
       return { canvas: output, point: function (p) { var dx = p.x - output.width / 2, dy = p.y - output.height / 2; return { x: area.x + area.width / 2 + (mapCosine * dx + mapSine * dy) * area.width / originalWidth, y: area.y + area.height / 2 + (-mapSine * dx + mapCosine * dy) * area.height / originalHeight }; } };
     });
   }
-  window.__lcPhotoOcr = { prepare: prepare, recognize: recognize, barcodeImages: barcodeImages };
+  window.__lcPhotoOcr = { prepare: prepare, recognize: recognize, barcodeImages: barcodeImages, skew: skew };
 }());

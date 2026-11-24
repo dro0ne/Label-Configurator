@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "name": "PP-OCRv6 Medium Cyrillic",
+  "file": "ru-medium-4f35024e.onnx",
+  "bytes": 62764959,
+  "sha256": "997e543cc73c2f99935fce99a79a74a5165602c816e15cf2b3e923e5a3420ac0",
+  "characters": "characters.json",
+  "lexicon": "ru-lexicon.json?v=b144235f",
+  "source": "https://huggingface.co/metrika-labs/PP-OCRv6_medium_rec_cyrillic_onnx",
+  "revision": "4f35024ef590b24c12101abfa5184c7fbb5f7299",
+  "license": "Apache-2.0",
+  "runtimeVersion": "1.31.1"
+}
