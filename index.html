@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="./assets/index-DQzgibq4.js"></script>
+    <script type="module" crossorigin src="./assets/index-DQzgibq4.js?v=20261123-1"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-BDEpssnV.css">
     <link rel="stylesheet" href="./modern-design.css?v=20260803-4">
     <link rel="stylesheet" href="./layout.css?v=20261102-1">
@@ -30,15 +30,19 @@
     </script>
     <link id="theme-dark" rel="stylesheet" href="./theme-dark.css?v=20261103-2">
     <script>document.getElementById('theme-dark').media = window.__lcThemeMedia;</script>
-    <link rel="stylesheet" href="./print-layout.css?v=20261103-1">
-    <link rel="stylesheet" href="./lc-extras.css?v=20261103-3">
+    <link rel="stylesheet" href="./print-layout.css?v=20261123-2">
+    <link rel="stylesheet" href="./lc-extras.css?v=20261123-1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="./ux-enhancements.js"></script>
-    <script defer src="./lc-extras.js?v=20261102-6"></script>
+    <script defer src="./lc-extras.js?v=20261123-1"></script>
     <link rel="stylesheet" href="./a4.css?v=20261103-11">
     <script defer src="./a4.js?v=20261103-6"></script>
-    <script defer src="./label-typo.js?v=20261103-2"></script>
+    <script defer src="./label-typo.js?v=20261123-1"></script>
+    <link rel="stylesheet" href="./photo-text.css?v=20261124-2">
+    <script defer src="./photo-ocr.js?v=20261124-2"></script>
+    <script defer src="./photo-barcode.js?v=20261124-2"></script>
+    <script defer src="./photo-text.js?v=20261124-2"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -54,6 +58,12 @@
   'use strict';
 
   function getJsPDF() { return window.jspdf && window.jspdf.jsPDF; }
+
+  function barcodeError(value) {
+    return /[^\x20-\x7e]/.test(String(value || '')) ?
+      'Для штрихкода используйте латинские буквы, цифры и знаки вроде «-» или «/». Кириллица и эмодзи не поддерживаются.' : '';
+  }
+  window.__lcBarcodeError = barcodeError;
 
   /* ── Save / Load config with our CSS-var fields ──────────────────────── */
 
@@ -136,12 +146,15 @@
     /* Merge our CSS-variable fields */
     return Object.assign(cfg, getLcVars(), {
       storeLogo:      window.__lcActiveLogo  || null,
-      storeLogoScale: window.__lcLogoScale   || 1.0
+      storeLogoScale: window.__lcLogoScale   || 1.0,
+      typography:    window.__lcGetTypography ? window.__lcGetTypography() : null
     });
   }
 
   /* Apply our CSS-var fields from a loaded config object */
   function applyLcVars(cfg) {
+    /* Старые файлы без typography открываются с исходным оформлением. */
+    if (window.__lcSetTypography) window.__lcSetTypography(cfg.typography);
     if (typeof cfg.lcCodesOffsetX   === 'number') window.__lcApplyVar('--codes-offset-x',   cfg.lcCodesOffsetX,   'px');
     if (typeof cfg.lcBarcodeOffsetX === 'number') window.__lcApplyVar('--barcode-offset-x', cfg.lcBarcodeOffsetX, 'px');
     if (typeof cfg.lcQrOffsetX      === 'number') window.__lcApplyVar('--qr-offset-x',      cfg.lcQrOffsetX,      'px');
@@ -255,6 +268,7 @@
 
   /* PDF generation */
   function generatePDF() {
+    if (window.__lcValidateCurrentBarcode && !window.__lcValidateCurrentBarcode(true)) return;
     if (!getJsPDF())         { alert('jsPDF не загружен');       return; }
     if (!window.html2canvas) { alert('html2canvas не загружен'); return; }
 
@@ -287,28 +301,24 @@
       'font-family:Inter,system-ui,-apple-system,sans-serif'
     ].join(';');
 
-    var sz = clone.querySelector('.label-safezone');
-    if (sz) sz.style.display = 'none';
-
-    clone.querySelectorAll('*').forEach(function (el) {
-      var cs = getComputedStyle(el);
-      if (cs.overflow === 'hidden' || cs.overflowX === 'hidden' || cs.overflowY === 'hidden')
-        el.style.overflow = 'visible';
-      if (cs.webkitLineClamp && cs.webkitLineClamp !== 'none') {
-        el.style.webkitLineClamp = 'unset';
-        el.style.display = 'block';
-      }
-    });
-
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
+    /* Служебные рамки не являются частью печатного макета. */
+    clone.style.setProperty('border', 'none', 'important');
+    clone.style.setProperty('border-radius', '0', 'important');
+    clone.querySelectorAll('.label-safezone, .lc-live-safe').forEach(function (el) { el.remove(); });
+    /* html2canvas 1.4.1 измеряет базовую линию шрифта картинкой 1×1.
+       Общий reset CSS делает img блочным и ломает это измерение. */
+    var metricsStyle = document.createElement('style');
+    metricsStyle.textContent = 'img[width="1"][height="1"]{display:inline-block!important}';
+    document.head.appendChild(metricsStyle);
 
     html2canvas(clone, {
       scale: 6, useCORS: true, allowTaint: true,
       backgroundColor: '#ffffff', logging: false,
       width: naturalW, height: naturalH, x: 0, y: 0
     }).then(function (canvas) {
-      document.body.removeChild(wrapper);
+      wrapper.remove(); metricsStyle.remove();
       var imgData = canvas.toDataURL('image/png');
       var doc = new (getJsPDF())({
         orientation: physW >= physH ? 'landscape' : 'portrait',
@@ -317,7 +327,7 @@
       doc.addImage(imgData, 'PNG', 0, 0, physW, physH);
       doc.save('label.pdf');
     }).catch(function (err) {
-      document.body.removeChild(wrapper);
+      wrapper.remove(); metricsStyle.remove();
       console.error(err);
       alert('Ошибка PDF: ' + err.message);
     });
@@ -1197,7 +1207,7 @@
 
   function createPrintSheet(source, row, logo, single) {
     var has = function (id) { return !!source.querySelector('[data-testid="preview-' + id + '"]'); };
-    var showBarcode = has('barcode') && !!row.inventory;
+    var showBarcode = has('barcode') && !!row.inventory && !window.__lcBarcodeError(row.inventory);
     var showQr = has('qr') && (!!row.serial || (single && !!row.inventory));
     var mode = showBarcode && showQr ? 'full' : (showBarcode ? 'inventory' : (showQr ? 'serial' : 'text'));
     var sheet = document.createElement('section');
@@ -1372,6 +1382,8 @@
         return;
       }
       row.mode = row.inventory && row.serial ? 'full' : (row.inventory ? 'inventory' : 'serial');
+      var codeError = window.__lcBarcodeError(row.inventory);
+      if (codeError) { invalid(index + 1, codeError); return; }
       rows.push(row);
     });
     return { rows: rows, errors: errors, errorDetails: errorDetails };
@@ -1531,10 +1543,29 @@
     var val = function (n) { var f = field(n); return f ? f.value.trim() : ''; };
     return { title: val('title'), inventory: val('inventory'), serial: val('serial') };
   }
+
+  function validateCurrentBarcode(focus) {
+    var input = field('inventory'), toggle = document.querySelector('[data-testid="switch-barcode"]');
+    if (!input) return true;
+    var message = toggle && toggle.getAttribute('aria-checked') === 'true' ? window.__lcBarcodeError(input.value) : '';
+    var error = document.getElementById('lc-inventory-error');
+    if (!error) {
+      error = document.createElement('p'); error.id = 'lc-inventory-error'; error.className = 'lc-inventory-error';
+      error.setAttribute('role', 'alert'); input.insertAdjacentElement('afterend', error);
+      var describedBy = input.getAttribute('aria-describedby') || '';
+      input.setAttribute('aria-describedby', (describedBy + ' ' + error.id).trim());
+    }
+    if (error.textContent !== message) error.textContent = message;
+    error.hidden = !message; input.setAttribute('aria-invalid', message ? 'true' : 'false');
+    if (message && focus) { input.scrollIntoView({ block: 'center' }); input.focus(); }
+    return !message;
+  }
+  window.__lcValidateCurrentBarcode = validateCurrentBarcode;
   function renderLive() {
     liveQueued = false;
     if (livePaused) return;
     var source = document.getElementById('print-root');
+    validateCurrentBarcode(false);
     if (!source || !source.querySelector('[data-testid="preview-title"],[data-testid="preview-barcode"],[data-testid="preview-qr"],[data-testid="preview-inventory"],[data-testid="preview-serial"],[data-testid="preview-store"]')) return;
     var live = source.querySelector(':scope > .lc-live');
     if (!live) {
@@ -1551,7 +1582,8 @@
     var problem = fitSheetCodes(sheet);
     var note = document.querySelector('.lc-live-note');
     var stage = document.querySelector('[data-testid="stage-preview"]');
-    if (!note && stage) { note = document.createElement('div'); note.className = 'lc-live-note'; note.setAttribute('role', 'status'); stage.appendChild(note); }
+    /* Стили полотна stage > div не должны растягивать абзац предупреждения. */
+    if (!note && stage) { note = document.createElement('p'); note.className = 'lc-live-note'; note.setAttribute('role', 'status'); stage.appendChild(note); }
     if (note) { note.hidden = !problem; note.textContent = problem ? '⚠ На этом размере ' + problem + ' — сканер может не прочитать. Выберите этикетку крупнее или отключите Штрих / QR.' : ''; }
   }
   function queueLive() { if (!liveQueued) { liveQueued = true; requestAnimationFrame(renderLive); } }
@@ -1580,6 +1612,7 @@
 
   /* Кнопка «Печать»: та же надёжная раскладка, что и у списка. */
   async function printCurrent() {
+    if (!validateCurrentBarcode(true)) return;
     var source = document.getElementById('print-root');
     if (!source) { window.print(); return; }
     var val = function (n) { var f = field(n); return f ? f.value.trim() : ''; };

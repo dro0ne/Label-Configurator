@@ -196,6 +196,29 @@
     apply(); paint();
   }
   window.__lcTypoReset = resetAll;
+  /* JSON и именованные шаблоны используют тот же набор настроек, что и интерфейс. */
+  window.__lcGetTypography = function () { return clone(state); };
+  window.__lcSetTypography = function (saved) {
+    var next = clone(DEF);
+    if (saved && typeof saved === 'object') {
+      ['title', 'meta', 'store'].forEach(function (key) {
+        var value = saved[key];
+        if (!value || typeof value !== 'object') return;
+        ['b', 'i', 'u'].forEach(function (flag) {
+          if (value[flag] === 0 || value[flag] === 1) next[key][flag] = value[flag];
+        });
+        if (Object.prototype.hasOwnProperty.call(ALIGN_FLEX, value.a)) next[key].a = value.a;
+        if (typeof value.s === 'number' && isFinite(value.s)) next[key].s = Math.max(0.6, Math.min(5, value.s));
+      });
+      if (saved.codes && Object.prototype.hasOwnProperty.call(ALIGN_FLEX, saved.codes.a)) next.codes.a = saved.codes.a;
+      [['bcW', 0.4, 1], ['bcH', 0.5, 1.6], ['qr', 0.5, 1.4]].forEach(function (range) {
+        var value = saved[range[0]];
+        if (typeof value === 'number' && isFinite(value)) next[range[0]] = Math.max(range[1], Math.min(range[2], value));
+      });
+    }
+    state = next;
+    save(); apply(); paint();
+  };
   /* «Сбросить настройки макета» тоже сбрасывает оформление текста и кодов */
   document.addEventListener('click', function (e) {
     if (e.target.closest && e.target.closest('[data-testid="button-reset"]')) setTimeout(resetAll, 0);

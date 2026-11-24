@@ -1,7 +1,7 @@
 /* Дополнения интерфейса:
    1) иконки у групп «Типографики», слайдеров и переключателей «что печатать» — чтобы не вчитываться;
    2) логотипы вместо текста на кнопках магазинов;
-   3) счётчик напечатанных этикеток (сегодня / всего). */
+   3) переключатель светлой и тёмной темы. */
 (function () {
   'use strict';
 
@@ -88,7 +88,6 @@
       var old = batchBtn.querySelector('svg'); if (old) old.remove();
       batchBtn.insertAdjacentHTML('afterbegin', icon('list'));
     }
-    injectCounter();
     injectThemeToggle();
   }
 
@@ -113,7 +112,7 @@
   }
   function injectThemeToggle() {
     if (themeBtn && document.body.contains(themeBtn)) return;
-    var anchor = counterEl && document.body.contains(counterEl) ? counterEl : document.querySelector('[data-testid="badge-size"]');
+    var anchor = document.querySelector('[data-testid="badge-size"]');
     if (!anchor || !anchor.parentElement) return;
     themeBtn = document.createElement('button');
     themeBtn.type = 'button';
@@ -131,74 +130,6 @@
     var onSystem = function () { if (!savedTheme()) applyTheme(null); };
     if (mq.addEventListener) mq.addEventListener('change', onSystem); else if (mq.addListener) mq.addListener(onSystem);
   }
-
-  /* ── Счётчик печати ─────────────────────────────────────────────── */
-  var KEY = 'lc-print-counter-v1';
-  function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
-  function load() {
-    var c = null;
-    try { c = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { c = null; }
-    if (!c || typeof c.total !== 'number') c = { day: today(), today: 0, total: 0 };
-    if (c.day !== today()) { c.day = today(); c.today = 0; }
-    return c;
-  }
-  var counter = load();
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(counter)); } catch (e) { /* приватный режим — считаем только в памяти */ } }
-
-  var counterEl = null;
-  function injectCounter() {
-    if (counterEl && document.body.contains(counterEl)) return;
-    var badge = document.querySelector('[data-testid="badge-size"]');
-    if (!badge || !badge.parentElement) return;
-    counterEl = document.createElement('button');
-    counterEl.type = 'button';
-    counterEl.className = 'lc-print-counter';
-    counterEl.setAttribute('data-testid', 'print-counter');
-    counterEl.addEventListener('click', function () {
-      if (confirm('Сбросить счётчик за сегодня (' + counter.today + ')?\n«Всего» (' + counter.total + ') останется.')) {
-        counter.today = 0; save(); render();
-      }
-    });
-    badge.parentElement.insertBefore(counterEl, badge);
-    render();
-  }
-  function plural(n) {
-    var m10 = n % 10, m100 = n % 100;
-    if (m10 === 1 && m100 !== 11) return 'этикетка';
-    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'этикетки';
-    return 'этикеток';
-  }
-  function render(bump) {
-    if (!counterEl) return;
-    counterEl.innerHTML = icon('printer') + '<span class="lc-pc-today">' + counter.today + '</span><span class="lc-pc-label">сегодня</span>';
-    counterEl.title = 'Отправлено на печать сегодня: ' + counter.today + ', всего: ' + counter.total + '.\nНажмите, чтобы сбросить счётчик за сегодня.';
-    if (bump) { counterEl.classList.remove('lc-bump'); void counterEl.offsetWidth; counterEl.classList.add('lc-bump'); }
-  }
-
-  var toastEl = null, toastTimer = null;
-  function toast(text) {
-    if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'lc-toast'; toastEl.setAttribute('role', 'status'); document.body.appendChild(toastEl); }
-    toastEl.innerHTML = icon('printer') + '<span></span>';
-    toastEl.querySelector('span').textContent = text;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3500);
-  }
-
-  /* Браузер не сообщает, сколько реально вышло из принтера, поэтому считаем,
-     сколько этикеток отправлено в диалог печати (одиночная = 1, список = число строк). */
-  var pending = 0;
-  window.addEventListener('beforeprint', function () {
-    if (document.body.classList.contains('lc-a4-printing')) { pending = 0; return; }
-    var batch = document.querySelector('body.lc-batch-printing #print-batch-root');
-    pending = batch ? batch.querySelectorAll('.lc-print-label').length : 1;
-  });
-  window.addEventListener('afterprint', function () {
-    if (!pending) return;
-    counter = load();
-    counter.today += pending; counter.total += pending; save(); render(true);
-    toast('Отправлено на печать: ' + pending + ' ' + plural(pending) + ' · сегодня ' + counter.today);
-    pending = 0;
-  });
 
   new MutationObserver(decorate).observe(document.body, { childList: true, subtree: true });
   decorate();

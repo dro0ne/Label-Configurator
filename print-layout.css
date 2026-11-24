@@ -1,4 +1,7 @@
 /* Геометрия печати — общая для светлой и тёмной темы. */
+.lc-inventory-error{margin:6px 0 0;color:#b42318;font-size:12px;line-height:1.4}
+.lc-inventory-error[hidden]{display:none}
+html[data-theme="dark"] .lc-inventory-error{color:#ffb4ab}
 @media print{
   html,body,#root,[data-testid="page-configurator"]{background:#fff!important}
   [data-testid="preview-label-surface"]{box-shadow:none!important;filter:none!important}
@@ -42,7 +45,7 @@
 #print-root:has(> .lc-live) > :not(.lc-live){visibility:hidden!important}
 #print-root > .lc-live .lc-print-sheet-title:hover,#print-root > .lc-live .lc-print-sheet-meta:hover,#print-root > .lc-live .lc-print-sheet-footer:hover{outline:1px dashed rgba(61,142,221,.6);outline-offset:1px}
 .lc-live-safe{position:absolute;inset:var(--sheet-pad,3mm);box-sizing:border-box;border:1px dashed rgba(61,142,221,.55);pointer-events:none}
-.lc-live-note{position:absolute;left:12px;right:12px;bottom:12px;z-index:5;padding:8px 12px;border:1px solid #f0c36a;border-radius:9px;background:#fff8e6;color:#744d08;font:600 .78rem/1.35 Inter,system-ui,sans-serif}
+.lc-live-note{position:absolute;left:12px;right:12px;bottom:12px;z-index:5;margin:0;padding:8px 12px;border:1px solid #f0c36a;border-radius:9px;background:#fff8e6;color:#744d08;font:600 .78rem/1.35 Inter,system-ui,sans-serif}
 .lc-live-note[hidden],.lc-live-safe[hidden]{display:none}
 html[data-theme="dark"] .lc-live-note{background:#2e2a1d;border-color:#6b5a2c;color:#ecd9a6}
 @media print{.lc-live,.lc-live-note{display:none!important}}
