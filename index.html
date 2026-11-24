@@ -2,6 +2,19 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <script id="lc-auto-update">
+      (function () {
+        if ('serviceWorker' in navigator && window.isSecureContext) {
+          navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' }).catch(function () {
+            /* Без поддержки или доступа к worker сайт работает как обычно. */
+          });
+        }
+        window.addEventListener('pageshow', function (event) {
+          /* Возврат из bfcache не запрашивает файлы: открываем актуальную страницу. */
+          if (event.persisted) window.location.reload();
+        });
+      }());
+    </script>
     <!-- убран maximum-scale=1 — блокировал зум на мобильных (WCAG 1.4.4) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Этикетки</title>
